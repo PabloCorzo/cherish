@@ -2,6 +2,7 @@
 pub struct BoardState{
     board: [[Piece;8];8],
     en_passant: Option<(i32,i32)>,
+    to_move: PieceColor,
 }
 impl BoardState{
     pub fn new() -> Self{
@@ -35,6 +36,7 @@ impl BoardState{
         let board_state = BoardState {
             board,
             en_passant: None,
+            to_move: PieceColor::White,
         };
         board_state 
     }
