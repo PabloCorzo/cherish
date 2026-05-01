@@ -1,14 +1,16 @@
 
 pub struct BoardState{
-    board: [[Piece;8];8],
-    en_passant: Option<(i32,i32)>,
-    to_move: PieceColor,
+    pub board: [[Piece;8];8],
+    pub en_passant: Option<(i32,i32)>,
+    pub to_move: PieceColor,
+    //Redundant information but more convenient to go through
+    pub playing_pieces: Vec<Piece>,
 }
 impl BoardState{
     pub fn new() -> Self{
 
         let mut board = [[Piece::new(PieceType::Empty,PieceColor::Empty,(0,0));8];8];
-        
+        let mut playing_pieces = Vec::new();
         //pawn rows
         for i in 0..8{
             board[1][i] = Piece::new(PieceType::Pawn, PieceColor::White, (1,i as i32));
@@ -33,10 +35,19 @@ impl BoardState{
         board[7][3] = Piece::new(PieceType::Queen, PieceColor::Black, (7,3));
         board[7][4] = Piece::new(PieceType::King, PieceColor::Black, (7,4));
         
+        for i in 0..8{
+            playing_pieces.push(board[0][i]); //white backrank
+            playing_pieces.push(board[1][i]); //white pawns
+            playing_pieces.push(board[6][i]); //black pawns
+            playing_pieces.push(board[7][i]); //black backrank
+        }
+
+
         let board_state = BoardState {
             board,
             en_passant: None,
             to_move: PieceColor::White,
+            playing_pieces
         };
         board_state 
     }

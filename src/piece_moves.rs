@@ -1,4 +1,4 @@
-use crate::board::{BoardState,Piece,PieceColor,PieceType};
+use crate::board::{self, BoardState, Piece, PieceColor, PieceType};
 use std::collections::HashSet;
 
 pub fn get_possible_moves(board: &mut BoardState,piece : &mut Piece) -> Vec<(i32,i32)>{
@@ -252,6 +252,42 @@ fn get_possible_king_moves(board: &mut BoardState,piece : &mut Piece) -> Vec<(i3
         }
     }
 
+    //ADD CASTLING
+
     possible_moves
 
+}
+
+fn is_capture(board: &mut BoardState, new_pos: (i32,i32)) -> bool{
+    return board.piece_at((new_pos.0,new_pos.1)).t != PieceType::Empty;
+}
+fn initial(t: PieceType) -> char{
+    match t{
+        PieceType::Pawn => return 'P',
+        PieceType::Rook => return 'R',
+        PieceType::Knight => return 'N',
+        PieceType::Bishop => return 'B',
+        PieceType::Queen => return 'Q',
+        PieceType::King => return 'K',
+        PieceType::Empty => panic!("Empty square has no initial"),
+    }
+}
+
+//given a piece and its new location, trusting its right by other code checking for it
+pub fn move_to_notation(board: &mut BoardState,piece: &mut Piece, pos: (i32,i32),new_pos: (i32,i32))-> String{
+    let s = String::new();
+    let capture = is_capture(board,new_pos);
+    let initial = initial(piece.t);
+    //pawn is just letter+num
+    //if takes, is letterx letter + number
+    //if en passant, the letter + Number is not pawn taken but position moved to
+    //if 2 same type pieces can take same square they are diff by letter
+    //if on same letter then by num
+
+    s
+}
+
+pub fn get_player_possible_moves(c: PieceColor)-> Vec<String>{    
+    let moves = Vec::new();
+    moves
 }
