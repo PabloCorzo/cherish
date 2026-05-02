@@ -52,11 +52,13 @@ impl BoardState{
         board_state 
     }
     pub fn piece_at(&mut self,pos: (i32,i32)) -> Piece {
+        //if clause for pawns checking diagonally in the edges of the board
+        if pos.0 < 0 || pos.0 > 7 ||pos.1 < 0 || pos.1 > 7 {return Piece { t: PieceType::Empty, c: PieceColor::Empty,pos: (-1,-1), castle_rights: false };}  
         self.board[pos.0 as usize][pos.1 as usize]
     }
 
 }
-#[derive(Copy,Clone)]
+#[derive(Debug,Copy,Clone)]
 pub struct Piece{
     pub t: PieceType,
     pub c: PieceColor,
@@ -81,10 +83,10 @@ impl Piece{
         color
     }
 }
-#[derive(Copy,Clone,PartialEq)]
+#[derive(Debug,Copy,Clone,PartialEq)]
 pub enum PieceColor{Black,White,Empty}
 
-#[derive(Copy,Clone,PartialEq)]
+#[derive(Debug,Copy,Clone,PartialEq)]
 pub enum PieceType{
     Pawn,
     Rook,
@@ -144,3 +146,8 @@ pub fn get_row_char(row: i32) -> char{
     };
     c
 }
+
+pub fn to_algebraic(pos: (i32,i32)) -> (i32,char){
+    (pos.0 + 1,get_row_char(pos.1))
+}
+

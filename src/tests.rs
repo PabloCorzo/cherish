@@ -40,6 +40,7 @@ mod move_notation_tests {
     /// Place `piece` at board[row][col] on `board`.
     fn place(board: &mut BoardState, row: usize, col: usize, piece: Piece) {
         board.board[row][col] = piece;
+        board.playing_pieces.push(piece);
     }
 
     /// Clear board[row][col] (set to Empty).
@@ -56,7 +57,8 @@ mod move_notation_tests {
     fn pawn_white_single_push_e2_e3() {
         let mut board = starting_board();
         let mut pawn = board.piece_at((1, 4));
-        let result = move_to_notation(&mut board, &mut pawn, (1, 4), (2, 4));
+        let result = move_to_notation(&mut board, &mut pawn, (2, 4));
+        println!("Testing {}, should be e3",result);
         assert_eq!(result, "e3");
     }
 
@@ -64,7 +66,7 @@ mod move_notation_tests {
     fn pawn_white_double_push_e2_e4() {
         let mut board = starting_board();
         let mut pawn = board.piece_at((1, 4));
-        let result = move_to_notation(&mut board, &mut pawn, (1, 4), (3, 4));
+        let result = move_to_notation(&mut board, &mut pawn, (3, 4));
         assert_eq!(result, "e4");
     }
 
@@ -72,7 +74,7 @@ mod move_notation_tests {
     fn pawn_white_single_push_a2_a3() {
         let mut board = starting_board();
         let mut pawn = board.piece_at((1, 0));
-        let result = move_to_notation(&mut board, &mut pawn, (1, 0), (2, 0));
+        let result = move_to_notation(&mut board, &mut pawn, (2, 0));
         assert_eq!(result, "a3");
     }
 
@@ -80,7 +82,7 @@ mod move_notation_tests {
     fn pawn_white_double_push_h2_h4() {
         let mut board = starting_board();
         let mut pawn = board.piece_at((1, 7));
-        let result = move_to_notation(&mut board, &mut pawn, (1, 7), (3, 7));
+        let result = move_to_notation(&mut board, &mut pawn, (3, 7));
         assert_eq!(result, "h4");
     }
 
@@ -88,7 +90,7 @@ mod move_notation_tests {
     fn pawn_black_single_push_e7_e6() {
         let mut board = starting_board();
         let mut pawn = board.piece_at((6, 4));
-        let result = move_to_notation(&mut board, &mut pawn, (6, 4), (5, 4));
+        let result = move_to_notation(&mut board, &mut pawn, (5, 4));
         assert_eq!(result, "e6");
     }
 
@@ -96,7 +98,7 @@ mod move_notation_tests {
     fn pawn_black_double_push_d7_d5() {
         let mut board = starting_board();
         let mut pawn = board.piece_at((6, 3));
-        let result = move_to_notation(&mut board, &mut pawn, (6, 3), (4, 3));
+        let result = move_to_notation(&mut board, &mut pawn, (4, 3));
         assert_eq!(result, "d5");
     }
 
@@ -104,7 +106,7 @@ mod move_notation_tests {
     fn pawn_black_single_push_a7_a6() {
         let mut board = starting_board();
         let mut pawn = board.piece_at((6, 0));
-        let result = move_to_notation(&mut board, &mut pawn, (6, 0), (5, 0));
+        let result = move_to_notation(&mut board, &mut pawn, (5, 0));
         assert_eq!(result, "a6");
     }
 
@@ -112,7 +114,7 @@ mod move_notation_tests {
     fn pawn_black_double_push_h7_h5() {
         let mut board = starting_board();
         let mut pawn = board.piece_at((6, 7));
-        let result = move_to_notation(&mut board, &mut pawn, (6, 7), (4, 7));
+        let result = move_to_notation(&mut board, &mut pawn, (4, 7));
         assert_eq!(result, "h5");
     }
 
@@ -128,7 +130,7 @@ mod move_notation_tests {
         // White pawn on e5 (row 4, col 4)
         place(&mut board, 4, 4, Piece::new(PieceType::Pawn, PieceColor::White, (4, 4)));
         let mut pawn = board.piece_at((4, 4));
-        let result = move_to_notation(&mut board, &mut pawn, (4, 4), (4, 3)); // wait — pawn captures diagonally
+        let result = move_to_notation(&mut board, &mut pawn,(4, 3)); // wait — pawn captures diagonally
         // White pawn captures from e-file to d-file going up: (4,4) -> (5,3)? 
         // Actually exd5 means white pawn on e4 captures on d5: from (3,4) captures (4,3)
         // Let's redo: pawn on e4 = (row3,col4), captures d5 = (row4,col3)
@@ -136,7 +138,7 @@ mod move_notation_tests {
         place(&mut board2, 3, 4, Piece::new(PieceType::Pawn, PieceColor::White, (3, 4)));
         place(&mut board2, 4, 3, Piece::new(PieceType::Pawn, PieceColor::Black, (4, 3)));
         let mut pawn2 = board2.piece_at((3, 4));
-        let result2 = move_to_notation(&mut board2, &mut pawn2, (3, 4), (4, 3));
+        let result2 = move_to_notation(&mut board2, &mut pawn2, (4, 3));
         assert_eq!(result2, "exd5");
     }
 
@@ -147,7 +149,7 @@ mod move_notation_tests {
         place(&mut board, 3, 3, Piece::new(PieceType::Pawn, PieceColor::White, (3, 3)));
         place(&mut board, 4, 4, Piece::new(PieceType::Pawn, PieceColor::Black, (4, 4)));
         let mut pawn = board.piece_at((3, 3));
-        let result = move_to_notation(&mut board, &mut pawn, (3, 3), (4, 4));
+        let result = move_to_notation(&mut board, &mut pawn, (4, 4));
         assert_eq!(result, "dxe5");
     }
 
@@ -158,7 +160,7 @@ mod move_notation_tests {
         place(&mut board, 4, 4, Piece::new(PieceType::Pawn, PieceColor::Black, (4, 4)));
         place(&mut board, 3, 3, Piece::new(PieceType::Pawn, PieceColor::White, (3, 3)));
         let mut pawn = board.piece_at((4, 4));
-        let result = move_to_notation(&mut board, &mut pawn, (4, 4), (3, 3));
+        let result = move_to_notation(&mut board, &mut pawn, (3, 3));
         assert_eq!(result, "exd4");
     }
 
@@ -168,7 +170,7 @@ mod move_notation_tests {
         place(&mut board, 3, 2, Piece::new(PieceType::Pawn, PieceColor::White, (3, 2)));
         place(&mut board, 4, 1, Piece::new(PieceType::Pawn, PieceColor::Black, (4, 1)));
         let mut pawn = board.piece_at((3, 2));
-        let result = move_to_notation(&mut board, &mut pawn, (3, 2), (4, 1));
+        let result = move_to_notation(&mut board, &mut pawn, (4, 1));
         assert_eq!(result, "cxb5");
     }
 
@@ -183,7 +185,7 @@ mod move_notation_tests {
         place(&mut board, 6, 4, Piece::new(PieceType::Pawn, PieceColor::White, (6, 4)));
         clear(&mut board, 7, 4); // clear black king — test only notation
         let mut pawn = board.piece_at((6, 4));
-        let result = move_to_notation(&mut board, &mut pawn, (6, 4), (7, 4));
+        let result = move_to_notation(&mut board, &mut pawn, (7, 4));
         assert_eq!(result, "e8=Q");
     }
 
@@ -193,7 +195,7 @@ mod move_notation_tests {
         place(&mut board, 6, 0, Piece::new(PieceType::Pawn, PieceColor::White, (6, 0)));
         clear(&mut board, 7, 0);
         let mut pawn = board.piece_at((6, 0));
-        let result = move_to_notation(&mut board, &mut pawn, (6, 0), (7, 0));
+        let result = move_to_notation(&mut board, &mut pawn, (7, 0));
         // Default promotion — function may need a promotion parameter;
         // testing queen as default (most common) or knight underpromotion
         assert!(result == "a8=Q" || result == "a8=N" || result == "a8=R" || result == "a8=B");
@@ -206,7 +208,7 @@ mod move_notation_tests {
         place(&mut board, 1, 3, Piece::new(PieceType::Pawn, PieceColor::Black, (1, 3)));
         clear(&mut board, 0, 3); // clear white queen
         let mut pawn = board.piece_at((1, 3));
-        let result = move_to_notation(&mut board, &mut pawn, (1, 3), (0, 3));
+        let result = move_to_notation(&mut board, &mut pawn, (0, 3));
         assert_eq!(result, "d1=Q");
     }
 
@@ -217,7 +219,7 @@ mod move_notation_tests {
         place(&mut board, 6, 4, Piece::new(PieceType::Pawn, PieceColor::White, (6, 4)));
         place(&mut board, 7, 5, Piece::new(PieceType::Bishop, PieceColor::Black, (7, 5)));
         let mut pawn = board.piece_at((6, 4));
-        let result = move_to_notation(&mut board, &mut pawn, (6, 4), (7, 5));
+        let result = move_to_notation(&mut board, &mut pawn, (7, 5));
         assert_eq!(result, "exf8=Q");
     }
 
@@ -229,7 +231,7 @@ mod move_notation_tests {
     fn knight_white_g1_f3() {
         let mut board = starting_board();
         let mut knight = board.piece_at((0, 6));
-        let result = move_to_notation(&mut board, &mut knight, (0, 6), (2, 5));
+        let result = move_to_notation(&mut board, &mut knight, (2, 5));
         assert_eq!(result, "Nf3");
     }
 
@@ -237,7 +239,7 @@ mod move_notation_tests {
     fn knight_white_b1_c3() {
         let mut board = starting_board();
         let mut knight = board.piece_at((0, 1));
-        let result = move_to_notation(&mut board, &mut knight, (0, 1), (2, 2));
+        let result = move_to_notation(&mut board, &mut knight, (2, 2));
         assert_eq!(result, "Nc3");
     }
 
@@ -245,7 +247,7 @@ mod move_notation_tests {
     fn knight_black_g8_f6() {
         let mut board = starting_board();
         let mut knight = board.piece_at((7, 6));
-        let result = move_to_notation(&mut board, &mut knight, (7, 6), (5, 5));
+        let result = move_to_notation(&mut board, &mut knight, (5, 5));
         assert_eq!(result, "Nf6");
     }
 
@@ -253,7 +255,7 @@ mod move_notation_tests {
     fn knight_black_b8_c6() {
         let mut board = starting_board();
         let mut knight = board.piece_at((7, 1));
-        let result = move_to_notation(&mut board, &mut knight, (7, 1), (5, 2));
+        let result = move_to_notation(&mut board, &mut knight, (5, 2));
         assert_eq!(result, "Nc6");
     }
 
@@ -264,7 +266,7 @@ mod move_notation_tests {
         place(&mut board, 2, 5, Piece::new(PieceType::Knight, PieceColor::White, (2, 5)));
         place(&mut board, 4, 4, Piece::new(PieceType::Pawn, PieceColor::Black, (4, 4)));
         let mut knight = board.piece_at((2, 5));
-        let result = move_to_notation(&mut board, &mut knight, (2, 5), (4, 4));
+        let result = move_to_notation(&mut board, &mut knight, (4, 4));
         assert_eq!(result, "Nxe5");
     }
 
@@ -274,7 +276,7 @@ mod move_notation_tests {
         place(&mut board, 5, 5, Piece::new(PieceType::Knight, PieceColor::Black, (5, 5)));
         place(&mut board, 3, 3, Piece::new(PieceType::Pawn, PieceColor::White, (3, 3)));
         let mut knight = board.piece_at((5, 5));
-        let result = move_to_notation(&mut board, &mut knight, (5, 5), (3, 3));
+        let result = move_to_notation(&mut board, &mut knight, (3, 3));
         assert_eq!(result, "Nxd4");
     }
 
@@ -283,7 +285,7 @@ mod move_notation_tests {
         let mut board = starting_board();
         place(&mut board, 2, 7, Piece::new(PieceType::Knight, PieceColor::White, (2, 7)));
         let mut knight = board.piece_at((2, 7));
-        let result = move_to_notation(&mut board, &mut knight, (2, 7), (4, 6));
+        let result = move_to_notation(&mut board, &mut knight,(4, 6));
         assert_eq!(result, "Ng5");
     }
 
@@ -297,7 +299,7 @@ mod move_notation_tests {
         // Clear the path: d2 pawn
         clear(&mut board, 1, 3);
         let mut bishop = board.piece_at((0, 2));
-        let result = move_to_notation(&mut board, &mut bishop, (0, 2), (2, 4));
+        let result = move_to_notation(&mut board, &mut bishop, (2, 4));
         assert_eq!(result, "Be3");
     }
 
@@ -306,7 +308,7 @@ mod move_notation_tests {
         let mut board = starting_board();
         clear(&mut board, 1, 4); // clear e2
         let mut bishop = board.piece_at((0, 5));
-        let result = move_to_notation(&mut board, &mut bishop, (0, 5), (3, 2));
+        let result = move_to_notation(&mut board, &mut bishop, (3, 2));
         assert_eq!(result, "Bc4");
     }
 
@@ -315,7 +317,7 @@ mod move_notation_tests {
         let mut board = starting_board();
         clear(&mut board, 6, 3); // clear d7 pawn
         let mut bishop = board.piece_at((7, 2));
-        let result = move_to_notation(&mut board, &mut bishop, (7, 2), (5, 4));
+        let result = move_to_notation(&mut board, &mut bishop, (5, 4));
         assert_eq!(result, "Be6");
     }
 
@@ -326,7 +328,7 @@ mod move_notation_tests {
         place(&mut board, 3, 2, Piece::new(PieceType::Bishop, PieceColor::White, (3, 2)));
         // f7 pawn is at (6,5) — already a black pawn
         let mut bishop = board.piece_at((3, 2));
-        let result = move_to_notation(&mut board, &mut bishop, (3, 2), (6, 5));
+        let result = move_to_notation(&mut board, &mut bishop, (6, 5));
         assert_eq!(result, "Bxf7");
     }
 
@@ -336,13 +338,13 @@ mod move_notation_tests {
         place(&mut board, 5, 4, Piece::new(PieceType::Bishop, PieceColor::Black, (5, 4)));
         // b2 = (1,1) — already a white pawn
         let mut bishop = board.piece_at((5, 4));
-        let result = move_to_notation(&mut board, &mut bishop, (5, 4), (1, 1)); // e6 -> b2 diagonal? check: (5,4)->(1,1) diff = (-4,-3) not diagonal
+        let result = move_to_notation(&mut board, &mut bishop, (1, 1)); // e6 -> b2 diagonal? check: (5,4)->(1,1) diff = (-4,-3) not diagonal
         // Let's use a correct diagonal: bishop on f5=(4,5), captures b1=(0,1)
         let mut board2 = starting_board();
         place(&mut board2, 4, 5, Piece::new(PieceType::Bishop, PieceColor::Black, (4, 5)));
         // b1 = (0,1) has a white knight
         let mut bishop2 = board2.piece_at((4, 5));
-        let result2 = move_to_notation(&mut board2, &mut bishop2, (4, 5), (0, 1));
+        let result2 = move_to_notation(&mut board2, &mut bishop2, (0, 1));
         assert_eq!(result2, "Bxb1");
     }
 
@@ -356,7 +358,7 @@ mod move_notation_tests {
         // Clear a2, a3 pawns
         clear(&mut board, 1, 0);
         let mut rook = board.piece_at((0, 0));
-        let result = move_to_notation(&mut board, &mut rook, (0, 0), (3, 0));
+        let result = move_to_notation(&mut board, &mut rook, (3, 0));
         assert_eq!(result, "Ra4");
     }
 
@@ -365,7 +367,7 @@ mod move_notation_tests {
         let mut board = starting_board();
         clear(&mut board, 6, 7); // clear h7 pawn
         let mut rook = board.piece_at((7, 7));
-        let result = move_to_notation(&mut board, &mut rook, (7, 7), (4, 7));
+        let result = move_to_notation(&mut board, &mut rook, (4, 7));
         assert_eq!(result, "Rh5");
     }
 
@@ -377,7 +379,7 @@ mod move_notation_tests {
         // d8 = (7,3) already has a black queen — place a piece to capture
         place(&mut board, 7, 3, Piece::new(PieceType::Rook, PieceColor::Black, (7, 3)));
         let mut rook = board.piece_at((0, 3));
-        let result = move_to_notation(&mut board, &mut rook, (0, 3), (7, 3));
+        let result = move_to_notation(&mut board, &mut rook, (7, 3));
         assert_eq!(result, "Rxd8");
     }
 
@@ -387,7 +389,7 @@ mod move_notation_tests {
         place(&mut board, 4, 4, Piece::new(PieceType::Rook, PieceColor::Black, (4, 4)));
         place(&mut board, 0, 4, Piece::new(PieceType::King, PieceColor::White, (0, 4)));
         let mut rook = board.piece_at((4, 4));
-        let result = move_to_notation(&mut board, &mut rook, (4, 4), (0, 4));
+        let result = move_to_notation(&mut board, &mut rook, (0, 4));
         assert_eq!(result, "Rxe1");
     }
 
@@ -396,7 +398,7 @@ mod move_notation_tests {
         let mut board = starting_board();
         place(&mut board, 4, 0, Piece::new(PieceType::Rook, PieceColor::White, (4, 0)));
         let mut rook = board.piece_at((4, 0));
-        let result = move_to_notation(&mut board, &mut rook, (4, 0), (4, 4));
+        let result = move_to_notation(&mut board, &mut rook, (4, 4));
         assert_eq!(result, "Re5");
     }
 
@@ -409,7 +411,7 @@ mod move_notation_tests {
         let mut board = starting_board();
         clear(&mut board, 1, 3); // clear d2 pawn
         let mut queen = board.piece_at((0, 3));
-        let result = move_to_notation(&mut board, &mut queen, (0, 3), (3, 3));
+        let result = move_to_notation(&mut board, &mut queen, (3, 3));
         assert_eq!(result, "Qd4");
     }
 
@@ -419,7 +421,7 @@ mod move_notation_tests {
         clear(&mut board, 6, 4); // clear e7
         clear(&mut board, 6, 3); // clear d7
         let mut queen = board.piece_at((7, 3));
-        let result = move_to_notation(&mut board, &mut queen, (7, 3), (3, 7));
+        let result = move_to_notation(&mut board, &mut queen, (3, 7));
         assert_eq!(result, "Qh4");
     }
 
@@ -429,7 +431,7 @@ mod move_notation_tests {
         place(&mut board, 3, 3, Piece::new(PieceType::Queen, PieceColor::White, (3, 3)));
         // g7 = (6,6) — already has a black pawn
         let mut queen = board.piece_at((3, 3));
-        let result = move_to_notation(&mut board, &mut queen, (3, 3), (6, 6));
+        let result = move_to_notation(&mut board, &mut queen, (6, 6));
         assert_eq!(result, "Qxg7");
     }
 
@@ -439,7 +441,7 @@ mod move_notation_tests {
         place(&mut board, 4, 5, Piece::new(PieceType::Queen, PieceColor::Black, (4, 5)));
         // b2 = (1,1) — has a white pawn
         let mut queen = board.piece_at((4, 5));
-        let result = move_to_notation(&mut board, &mut queen, (4, 5), (1, 2)); // f5->c2 diagonal
+        let result = move_to_notation(&mut board, &mut queen, (1, 2)); // f5->c2 diagonal
         // (4,5) to (1,2): diff=(-3,-3) diagonal ✓, c2=(1,2)
         assert_eq!(result, "Qxc2");
     }
@@ -450,7 +452,7 @@ mod move_notation_tests {
         place(&mut board, 0, 3, Piece::new(PieceType::Queen, PieceColor::White, (0, 3)));
         clear(&mut board, 1, 4); // clear e2
         let mut queen = board.piece_at((0, 3));
-        let result = move_to_notation(&mut board, &mut queen, (0, 3), (4, 7));
+        let result = move_to_notation(&mut board, &mut queen, (4, 7));
         assert_eq!(result, "Qh5");
     }
 
@@ -463,7 +465,7 @@ mod move_notation_tests {
         let mut board = starting_board();
         clear(&mut board, 1, 4); // clear e2 pawn
         let mut king = board.piece_at((0, 4));
-        let result = move_to_notation(&mut board, &mut king, (0, 4), (1, 4));
+        let result = move_to_notation(&mut board, &mut king, (1, 4));
         assert_eq!(result, "Ke2");
     }
 
@@ -472,26 +474,29 @@ mod move_notation_tests {
         let mut board = starting_board();
         clear(&mut board, 6, 3); // clear d7 pawn
         let mut king = board.piece_at((7, 4));
-        let result = move_to_notation(&mut board, &mut king, (7, 4), (6, 3));
+        let result = move_to_notation(&mut board, &mut king, (6, 3));
         assert_eq!(result, "Kd7");
     }
 
     #[test]
     fn king_white_capture_kxf2() {
         let mut board = starting_board();
+        clear(&mut board, 0, 4);
         place(&mut board, 1, 4, Piece::new(PieceType::King, PieceColor::White, (1, 4)));
         place(&mut board, 1, 5, Piece::new(PieceType::Pawn, PieceColor::Black, (1, 5)));
         let mut king = board.piece_at((1, 4));
-        let result = move_to_notation(&mut board, &mut king, (1, 4), (1, 5));
+        let result = move_to_notation(&mut board, &mut king, (1, 5));
         assert_eq!(result, "Kxf2");
     }
 
     #[test]
     fn king_black_to_f7() {
         let mut board = starting_board();
+        clear(&mut board, 6, 5); // clear f7 black pawn
+        clear(&mut board, 7, 4); // clear f7 black pawn
         place(&mut board, 5, 4, Piece::new(PieceType::King, PieceColor::Black, (5, 4)));
         let mut king = board.piece_at((5, 4));
-        let result = move_to_notation(&mut board, &mut king, (5, 4), (6, 5));
+        let result = move_to_notation(&mut board, &mut king, (6, 5));
         assert_eq!(result, "Kf7");
     }
 
@@ -503,10 +508,13 @@ mod move_notation_tests {
     fn disambiguation_rook_file_rae1() {
         // Two white rooks on a1 and h1; both can go to e1 — disambiguate by file
         let mut board = starting_board();
-        place(&mut board, 0, 0, Piece::new(PieceType::Rook, PieceColor::White, (0, 0)));
-        place(&mut board, 0, 7, Piece::new(PieceType::Rook, PieceColor::White, (0, 7)));
+        // place(&mut board, 0, 0, Piece::new(PieceType::Rook, PieceColor::White, (0, 0)));
+        // place(&mut board, 0, 7, Piece::new(PieceType::Rook, PieceColor::White, (0, 7)));
+        for i in 1..7{
+            clear(&mut board, 0, i); // clear white king from e1
+        }
         let mut rook = board.piece_at((0, 0));
-        let result = move_to_notation(&mut board, &mut rook, (0, 0), (0, 4));
+        let result = move_to_notation(&mut board, &mut rook, (0, 4));
         assert_eq!(result, "Rae1");
     }
 
@@ -515,8 +523,12 @@ mod move_notation_tests {
         let mut board = starting_board();
         place(&mut board, 0, 0, Piece::new(PieceType::Rook, PieceColor::White, (0, 0)));
         place(&mut board, 0, 7, Piece::new(PieceType::Rook, PieceColor::White, (0, 7)));
+        clear(&mut board, 0, 4); // clear white king from e1
+        for i in 1..7{
+            clear(&mut board, 0, i); 
+        }
         let mut rook = board.piece_at((0, 7));
-        let result = move_to_notation(&mut board, &mut rook, (0, 7), (0, 4));
+        let result = move_to_notation(&mut board, &mut rook,(0, 4));
         assert_eq!(result, "Rhe1");
     }
 
@@ -527,7 +539,9 @@ mod move_notation_tests {
         place(&mut board, 0, 4, Piece::new(PieceType::Rook, PieceColor::White, (0, 4)));
         place(&mut board, 7, 4, Piece::new(PieceType::Rook, PieceColor::White, (7, 4)));
         let mut rook = board.piece_at((0, 4));
-        let result = move_to_notation(&mut board, &mut rook, (0, 4), (4, 4));
+        clear(&mut board, 1, 4);
+        clear(&mut board, 6, 4);
+        let result = move_to_notation(&mut board, &mut rook, (4, 4));
         assert_eq!(result, "R1e5");
     }
 
@@ -537,7 +551,9 @@ mod move_notation_tests {
         place(&mut board, 0, 4, Piece::new(PieceType::Rook, PieceColor::White, (0, 4)));
         place(&mut board, 7, 4, Piece::new(PieceType::Rook, PieceColor::White, (7, 4)));
         let mut rook = board.piece_at((7, 4));
-        let result = move_to_notation(&mut board, &mut rook, (7, 4), (4, 4));
+        clear(&mut board, 1, 4);
+        clear(&mut board, 6, 4);
+        let result = move_to_notation(&mut board, &mut rook, (4, 4));
         assert_eq!(result, "R8e5");
     }
 
@@ -545,20 +561,22 @@ mod move_notation_tests {
     fn disambiguation_knight_file_nbd2() {
         // Two knights on b1 and f3 can both reach d2 — disambiguate by file
         let mut board = starting_board();
+        clear(&mut board, 1, 3); // clear d2 white pawn
         place(&mut board, 0, 1, Piece::new(PieceType::Knight, PieceColor::White, (0, 1)));
         place(&mut board, 2, 5, Piece::new(PieceType::Knight, PieceColor::White, (2, 5)));
         let mut knight = board.piece_at((0, 1));
-        let result = move_to_notation(&mut board, &mut knight, (0, 1), (1, 3));
+        let result = move_to_notation(&mut board, &mut knight, (1, 3));
         assert_eq!(result, "Nbd2");
     }
 
     #[test]
     fn disambiguation_knight_file_nfd2() {
         let mut board = starting_board();
+        clear(&mut board, 1, 3); // clear d2 white pawn
         place(&mut board, 0, 1, Piece::new(PieceType::Knight, PieceColor::White, (0, 1)));
         place(&mut board, 2, 5, Piece::new(PieceType::Knight, PieceColor::White, (2, 5)));
         let mut knight = board.piece_at((2, 5));
-        let result = move_to_notation(&mut board, &mut knight, (2, 5), (1, 3));
+        let result = move_to_notation(&mut board, &mut knight, (1, 3));
         assert_eq!(result, "Nfd2");
     }
 
@@ -569,7 +587,7 @@ mod move_notation_tests {
         place(&mut board, 4, 0, Piece::new(PieceType::Queen, PieceColor::White, (4, 0)));
         place(&mut board, 4, 7, Piece::new(PieceType::Queen, PieceColor::White, (4, 7)));
         let mut queen = board.piece_at((4, 0));
-        let result = move_to_notation(&mut board, &mut queen, (4, 0), (4, 3));
+        let result = move_to_notation(&mut board, &mut queen, (4, 3));
         assert_eq!(result, "Qad5");
     }
 
@@ -585,7 +603,7 @@ mod move_notation_tests {
         place(&mut board, 4, 3, Piece::new(PieceType::Pawn, PieceColor::Black, (4, 3)));
         board.en_passant = Some((5, 3));
         let mut pawn = board.piece_at((4, 4));
-        let result = move_to_notation(&mut board, &mut pawn, (4, 4), (5, 3));
+        let result = move_to_notation(&mut board, &mut pawn, (5, 3));
         assert_eq!(result, "exd6");
     }
 
@@ -596,8 +614,10 @@ mod move_notation_tests {
         place(&mut board, 3, 3, Piece::new(PieceType::Pawn, PieceColor::Black, (3, 3)));
         place(&mut board, 3, 4, Piece::new(PieceType::Pawn, PieceColor::White, (3, 4)));
         board.en_passant = Some((2, 4));
+        //change turn to color able to en passant for en passant check
+        board.to_move = PieceColor::Black;
         let mut pawn = board.piece_at((3, 3));
-        let result = move_to_notation(&mut board, &mut pawn, (3, 3), (2, 4));
+        let result = move_to_notation(&mut board, &mut pawn, (2, 4));
         assert_eq!(result, "dxe3");
     }
 
@@ -608,7 +628,7 @@ mod move_notation_tests {
         place(&mut board, 4, 1, Piece::new(PieceType::Pawn, PieceColor::Black, (4, 1)));
         board.en_passant = Some((5, 1));
         let mut pawn = board.piece_at((4, 2));
-        let result = move_to_notation(&mut board, &mut pawn, (4, 2), (5, 1));
+        let result = move_to_notation(&mut board, &mut pawn, (5, 1));
         assert_eq!(result, "cxb6");
     }
 
@@ -622,7 +642,7 @@ mod move_notation_tests {
         place(&mut board, 0, 0, Piece::new(PieceType::Rook, PieceColor::White, (0, 0)));
         clear(&mut board, 1, 0);
         let mut rook = board.piece_at((0, 0));
-        let result = move_to_notation(&mut board, &mut rook, (0, 0), (4, 0));
+        let result = move_to_notation(&mut board, &mut rook, (4, 0));
         assert_eq!(result, "Ra5");
     }
 
@@ -633,14 +653,14 @@ mod move_notation_tests {
         // h7=(6,7) has a black pawn — clear it first for a quiet move
         clear(&mut board, 6, 7);
         let mut bishop = board.piece_at((2, 5));
-        let result = move_to_notation(&mut board, &mut bishop, (2, 5), (6, 7)); // f3->h5 not h7
+        let result = move_to_notation(&mut board, &mut bishop, (6, 7)); // f3->h5 not h7
         // f3=(2,5) to h7=(6,7): diff=(4,2) — not diagonal. Use a5=(4,0)
         // Let's use bishop on e4=(3,4) to h7=(6,7): diff=(3,3) ✓
         let mut board2 = starting_board();
         place(&mut board2, 3, 4, Piece::new(PieceType::Bishop, PieceColor::White, (3, 4)));
         clear(&mut board2, 6, 7);
         let mut bishop2 = board2.piece_at((3, 4));
-        let result2 = move_to_notation(&mut board2, &mut bishop2, (3, 4), (6, 7));
+        let result2 = move_to_notation(&mut board2, &mut bishop2, (6, 7));
         assert_eq!(result2, "Bh7");
     }
 
@@ -649,9 +669,10 @@ mod move_notation_tests {
         let mut board = starting_board();
         place(&mut board, 3, 3, Piece::new(PieceType::Queen, PieceColor::White, (3, 3)));
         clear(&mut board, 7, 0); // clear black rook
+        clear(&mut board, 6, 0); // clear black rook
         // d4=(3,3) to a7=(6,0): diff=(3,-3) diagonal ✓, a7
         let mut queen = board.piece_at((3, 3));
-        let result = move_to_notation(&mut board, &mut queen, (3, 3), (6, 0));
+        let result = move_to_notation(&mut board, &mut queen, (6, 0));
         assert_eq!(result, "Qa7");
     }
 
@@ -661,12 +682,12 @@ mod move_notation_tests {
         place(&mut board, 2, 6, Piece::new(PieceType::Knight, PieceColor::White, (2, 6)));
         // g3=(2,6) to h5=(4,7): not a valid knight move (diff 2,1) ✓
         let mut knight = board.piece_at((2, 6));
-        let result = move_to_notation(&mut board, &mut knight, (2, 6), (3, 7)); // (1,1) not valid
+        let result = move_to_notation(&mut board, &mut knight, (3, 7)); // (1,1) not valid
         // Valid knight move from g3=(2,6): to f5=(4,5) diff(2,-1) ✓ or h5=(4,7) diff(2,1) ✓
         let mut board2 = starting_board();
         place(&mut board2, 2, 6, Piece::new(PieceType::Knight, PieceColor::White, (2, 6)));
         let mut knight2 = board2.piece_at((2, 6));
-        let result2 = move_to_notation(&mut board2, &mut knight2, (2, 6), (4, 7));
+        let result2 = move_to_notation(&mut board2, &mut knight2,  (4, 7));
         assert_eq!(result2, "Nh5");
     }
 
@@ -674,7 +695,7 @@ mod move_notation_tests {
     fn pawn_white_d2_d3() {
         let mut board = starting_board();
         let mut pawn = board.piece_at((1, 3));
-        let result = move_to_notation(&mut board, &mut pawn, (1, 3), (2, 3));
+        let result = move_to_notation(&mut board, &mut pawn, (2, 3));
         assert_eq!(result, "d3");
     }
 
@@ -682,7 +703,7 @@ mod move_notation_tests {
     fn pawn_white_c2_c4() {
         let mut board = starting_board();
         let mut pawn = board.piece_at((1, 2));
-        let result = move_to_notation(&mut board, &mut pawn, (1, 2), (3, 2));
+        let result = move_to_notation(&mut board, &mut pawn, (3, 2));
         assert_eq!(result, "c4");
     }
 
@@ -690,7 +711,7 @@ mod move_notation_tests {
     fn pawn_black_f7_f5() {
         let mut board = starting_board();
         let mut pawn = board.piece_at((6, 5));
-        let result = move_to_notation(&mut board, &mut pawn, (6, 5), (4, 5));
+        let result = move_to_notation(&mut board, &mut pawn, (4, 5));
         assert_eq!(result, "f5");
     }
 
@@ -698,7 +719,7 @@ mod move_notation_tests {
     fn pawn_black_g7_g6() {
         let mut board = starting_board();
         let mut pawn = board.piece_at((6, 6));
-        let result = move_to_notation(&mut board, &mut pawn, (6, 6), (5, 6));
+        let result = move_to_notation(&mut board, &mut pawn, (5, 6));
         assert_eq!(result, "g6");
     }
 
@@ -706,7 +727,7 @@ mod move_notation_tests {
     fn knight_g8_to_h6() {
         let mut board = starting_board();
         let mut knight = board.piece_at((7, 6));
-        let result = move_to_notation(&mut board, &mut knight, (7, 6), (5, 7));
+        let result = move_to_notation(&mut board, &mut knight, (5, 7));
         assert_eq!(result, "Nh6");
     }
 
@@ -717,7 +738,7 @@ mod move_notation_tests {
         place(&mut board, 2, 6, Piece::new(PieceType::Bishop, PieceColor::Black, (2, 6)));
         // h2=(1,7) has white pawn
         let mut bishop = board.piece_at((2, 6));
-        let result = move_to_notation(&mut board, &mut bishop, (2, 6), (1, 7));
+        let result = move_to_notation(&mut board, &mut bishop, (1, 7));
         assert_eq!(result, "Bxh2");
     }
 
@@ -727,7 +748,7 @@ mod move_notation_tests {
         place(&mut board, 4, 0, Piece::new(PieceType::Rook, PieceColor::White, (4, 0)));
         place(&mut board, 4, 7, Piece::new(PieceType::Rook, PieceColor::Black, (4, 7)));
         let mut rook = board.piece_at((4, 0));
-        let result = move_to_notation(&mut board, &mut rook, (4, 0), (4, 7));
+        let result = move_to_notation(&mut board, &mut rook, (4, 7));
         assert_eq!(result, "Rxh5");
     }
 
@@ -738,7 +759,7 @@ mod move_notation_tests {
         // h8=(7,7) has black rook
         let mut queen = board.piece_at((3, 3));
         // d4=(3,3) to h8=(7,7): diff=(4,4) diagonal ✓
-        let result = move_to_notation(&mut board, &mut queen, (3, 3), (7, 7));
+        let result = move_to_notation(&mut board, &mut queen, (7, 7));
         assert_eq!(result, "Qxh8");
     }
 
@@ -748,7 +769,7 @@ mod move_notation_tests {
         place(&mut board, 4, 4, Piece::new(PieceType::King, PieceColor::White, (4, 4)));
         place(&mut board, 4, 3, Piece::new(PieceType::Pawn, PieceColor::Black, (4, 3)));
         let mut king = board.piece_at((4, 4));
-        let result = move_to_notation(&mut board, &mut king, (4, 4), (4, 3)); // e5->d5
+        let result = move_to_notation(&mut board, &mut king, (4, 3)); // e5->d5
         assert_eq!(result, "Kxd5");
     }
 
@@ -756,7 +777,7 @@ mod move_notation_tests {
     fn pawn_white_b2_b4() {
         let mut board = starting_board();
         let mut pawn = board.piece_at((1, 1));
-        let result = move_to_notation(&mut board, &mut pawn, (1, 1), (3, 1));
+        let result = move_to_notation(&mut board, &mut pawn, (3, 1));
         assert_eq!(result, "b4");
     }
 
@@ -764,7 +785,7 @@ mod move_notation_tests {
     fn pawn_black_c7_c5() {
         let mut board = starting_board();
         let mut pawn = board.piece_at((6, 2));
-        let result = move_to_notation(&mut board, &mut pawn, (6, 2), (4, 2));
+        let result = move_to_notation(&mut board, &mut pawn, (4, 2));
         assert_eq!(result, "c5");
     }
 
@@ -772,7 +793,7 @@ mod move_notation_tests {
     fn pawn_white_f2_f3() {
         let mut board = starting_board();
         let mut pawn = board.piece_at((1, 5));
-        let result = move_to_notation(&mut board, &mut pawn, (1, 5), (2, 5));
+        let result = move_to_notation(&mut board, &mut pawn, (2, 5));
         assert_eq!(result, "f3");
     }
 
@@ -783,7 +804,7 @@ mod move_notation_tests {
         place(&mut board, 2, 2, Piece::new(PieceType::Pawn, PieceColor::White, (2, 2)));
         let mut knight = board.piece_at((4, 1));
         // b5=(4,1) to c3=(2,2): diff=(-2,1) ✓
-        let result = move_to_notation(&mut board, &mut knight, (4, 1), (2, 2));
+        let result = move_to_notation(&mut board, &mut knight, (2, 2));
         assert_eq!(result, "Nxc3");
     }
 
@@ -792,7 +813,7 @@ mod move_notation_tests {
         let mut board = starting_board();
         clear(&mut board, 0, 5); // clear f1 bishop
         let mut king = board.piece_at((0, 4));
-        let result = move_to_notation(&mut board, &mut king, (0, 4), (0, 5));
+        let result = move_to_notation(&mut board, &mut king, (0, 5));
         assert_eq!(result, "Kf1");
     }
 
@@ -801,7 +822,7 @@ mod move_notation_tests {
         let mut board = starting_board();
         clear(&mut board, 6, 4); // clear e7 pawn
         let mut king = board.piece_at((7, 4));
-        let result = move_to_notation(&mut board, &mut king, (7, 4), (6, 4));
+        let result = move_to_notation(&mut board, &mut king, (6, 4));
         assert_eq!(result, "Ke7");
     }
 
@@ -811,7 +832,7 @@ mod move_notation_tests {
         place(&mut board, 3, 0, Piece::new(PieceType::Rook, PieceColor::White, (3, 0)));
         let mut rook = board.piece_at((3, 0));
         // a4=(3,0) to d4=(3,3)
-        let result = move_to_notation(&mut board, &mut rook, (3, 0), (3, 3));
+        let result = move_to_notation(&mut board, &mut rook, (3, 3));
         assert_eq!(result, "Rd4");
     }
 
@@ -822,7 +843,7 @@ mod move_notation_tests {
         place(&mut board, 4, 6, Piece::new(PieceType::Pawn, PieceColor::Black, (4, 6)));
         board.en_passant = Some((5, 6));
         let mut pawn = board.piece_at((4, 5));
-        let result = move_to_notation(&mut board, &mut pawn, (4, 5), (5, 6));
+        let result = move_to_notation(&mut board, &mut pawn,(5, 6));
         assert_eq!(result, "fxg6");
     }
 
@@ -832,7 +853,7 @@ mod move_notation_tests {
         place(&mut board, 3, 2, Piece::new(PieceType::Bishop, PieceColor::White, (3, 2)));
         // c4=(3,2) to b5=(4,1): diff=(1,-1) diagonal ✓
         let mut bishop = board.piece_at((3, 2));
-        let result = move_to_notation(&mut board, &mut bishop, (3, 2), (4, 1));
+        let result = move_to_notation(&mut board, &mut bishop, (4, 1));
         assert_eq!(result, "Bb5");
     }
 
@@ -842,7 +863,7 @@ mod move_notation_tests {
         place(&mut board, 7, 3, Piece::new(PieceType::Queen, PieceColor::Black, (7, 3)));
         clear(&mut board, 6, 3);
         let mut queen = board.piece_at((7, 3));
-        let result = move_to_notation(&mut board, &mut queen, (7, 3), (3, 3));
+        let result = move_to_notation(&mut board, &mut queen, (3, 3));
         assert_eq!(result, "Qd4");
     }
 
@@ -850,7 +871,7 @@ mod move_notation_tests {
     fn pawn_white_g2_g4() {
         let mut board = starting_board();
         let mut pawn = board.piece_at((1, 6));
-        let result = move_to_notation(&mut board, &mut pawn, (1, 6), (3, 6));
+        let result = move_to_notation(&mut board, &mut pawn, (3, 6));
         assert_eq!(result, "g4");
     }
 
@@ -858,7 +879,7 @@ mod move_notation_tests {
     fn pawn_black_b7_b5() {
         let mut board = starting_board();
         let mut pawn = board.piece_at((6, 1));
-        let result = move_to_notation(&mut board, &mut pawn, (6, 1), (4, 1));
+        let result = move_to_notation(&mut board, &mut pawn, (4, 1));
         assert_eq!(result, "b5");
     }
 
@@ -868,7 +889,7 @@ mod move_notation_tests {
         place(&mut board, 2, 5, Piece::new(PieceType::Knight, PieceColor::White, (2, 5)));
         let mut knight = board.piece_at((2, 5));
         // f3=(2,5) to e5=(4,4): diff=(2,-1) ✓
-        let result = move_to_notation(&mut board, &mut knight, (2, 5), (4, 4));
+        let result = move_to_notation(&mut board, &mut knight, (4, 4));
         assert_eq!(result, "Ne5");
     }
 
@@ -879,7 +900,7 @@ mod move_notation_tests {
         clear(&mut board, 6, 4); // clear e7 pawn
         // f8=(7,5) to d6=(5,3): diff=(-2,-2) diagonal ✓
         let mut bishop = board.piece_at((7, 5));
-        let result = move_to_notation(&mut board, &mut bishop, (7, 5), (5, 3));
+        let result = move_to_notation(&mut board, &mut bishop, (5, 3));
         assert_eq!(result, "Bd6");
     }
 
@@ -889,16 +910,18 @@ mod move_notation_tests {
         place(&mut board, 4, 0, Piece::new(PieceType::Rook, PieceColor::Black, (4, 0)));
         let mut rook = board.piece_at((4, 0));
         // a5=(4,0) to e5=(4,4)
-        let result = move_to_notation(&mut board, &mut rook, (4, 0), (4, 4));
+        let result = move_to_notation(&mut board, &mut rook, (4, 4));
         assert_eq!(result, "Re5");
     }
 
     #[test]
     fn king_white_to_d2() {
         let mut board = starting_board();
+        clear(&mut board, 1, 3); // clear d2 white pawn
+        clear(&mut board, 0, 4); // clear d2 white pawn
         place(&mut board, 1, 4, Piece::new(PieceType::King, PieceColor::White, (1, 4)));
         let mut king = board.piece_at((1, 4));
-        let result = move_to_notation(&mut board, &mut king, (1, 4), (1, 3));
+        let result = move_to_notation(&mut board, &mut king, (1, 3));
         assert_eq!(result, "Kd2");
     }
 
