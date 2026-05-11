@@ -249,6 +249,47 @@ fn get_possible_king_moves(board: &mut BoardState,piece : &mut Piece) -> Vec<(i3
     }
 
     //ADD CASTLING
+    //white long castle is ugliest if ever 
+    if board.piece_at((0,0)).t == PieceType::Rook &&
+    board.piece_at((0,0)).castle_rights &&
+    board.piece_at((0,4)).castle_rights &&
+    board.piece_at((0,4)).c  == piece.c &&
+    board.piece_at((0,1)).t == PieceType::Empty  &&
+    board.piece_at((0,2)).t == PieceType::Empty  && 
+    board.piece_at((0,3)).t == PieceType::Empty{
+        possible_moves.push((0,2));
+    }
+
+    //white short castle is ugliest if ever 
+    if board.piece_at((0,7)).t == PieceType::Rook &&
+    board.piece_at((0,7)).castle_rights &&
+    board.piece_at((0,4)).castle_rights &&
+    board.piece_at((0,4)).c  == piece.c &&
+    board.piece_at((0,5)).t == PieceType::Empty  &&
+    board.piece_at((0,6)).t == PieceType::Empty{
+        possible_moves.push((0,6));
+    }
+
+    //black long castle is ugliest if ever 
+    if board.piece_at((7,0)).t == PieceType::Rook &&
+    board.piece_at((7,0)).castle_rights &&
+    board.piece_at((7,4)).castle_rights &&
+    board.piece_at((7,4)).c  == piece.c &&
+    board.piece_at((7,1)).t == PieceType::Empty  &&
+    board.piece_at((7,2)).t == PieceType::Empty  && 
+    board.piece_at((7,3)).t == PieceType::Empty{
+        possible_moves.push((7,2));
+    }
+
+    //white short castle is ugliest if ever 
+    if board.piece_at((7,7)).t == PieceType::Rook &&
+    board.piece_at((7,7)).castle_rights &&
+    board.piece_at((7,4)).castle_rights &&
+    board.piece_at((7,4)).c  == piece.c &&
+    board.piece_at((7,5)).t == PieceType::Empty  &&
+    board.piece_at((7,6)).t == PieceType::Empty{
+        possible_moves.push((7,6));
+    }
 
     possible_moves
 
