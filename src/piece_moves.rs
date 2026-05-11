@@ -281,7 +281,7 @@ fn get_possible_king_moves(board: &mut BoardState,piece : &mut Piece) -> Vec<(i3
         possible_moves.push((7,2));
     }
 
-    //white short castle is ugliest if ever 
+    //black short castle is ugliest if ever 
     if board.piece_at((7,7)).t == PieceType::Rook &&
     board.piece_at((7,7)).castle_rights &&
     board.piece_at((7,4)).castle_rights &&
@@ -308,6 +308,21 @@ fn is_capture(board: &mut BoardState, pos: (i32,i32),new_pos: (i32,i32)) -> bool
     }
 
     return board.piece_at((new_pos.0,new_pos.1)).t != PieceType::Empty;
+}
+
+fn is_castle(board: &mut BoardState,pos: (i32,i32),new_pos: (i32,i32)) -> &str{
+    
+    let is_king = board.piece_at(pos).t == PieceType::King;
+    let is_horizontal = pos.0 == new_pos.0;
+    if !is_king || !is_horizontal {return "none"}
+    
+    let x_diff = new_pos.1 - pos.1;
+    match x_diff{
+        2  => return "short",
+        -2 => return "long",
+        _  => return "none",
+    }
+
 }
 
 fn is_promotion(board: &mut BoardState, pos: (i32,i32),new_pos: (i32,i32)) -> bool{
@@ -425,6 +440,13 @@ pub fn move_to_notation(board: &mut BoardState,piece: &mut Piece,new_pos: (i32,i
     
     s.push_str(&format!("{}{}",new_pos_lettered.1,new_pos_lettered.0));
 
+    let castle_type = is_castle(board, piece.pos, new_pos);
+    match castle_type{
+        "short" => return "O-O".into(),
+        "long" => return "O-O-O".into(),
+        "none" => {},
+        _ => panic!(),
+    }
 
     s
 }
