@@ -23,7 +23,7 @@ fn get_possible_pawn_moves(board: &mut BoardState,piece : &mut Piece) -> Vec<(i3
         PieceColor::Empty => panic!("Pawn has no color"),
     };
     //has not moved and 2 squares ahead is clear
-    if first_square == piece.pos.0 && board.piece_at((jump_spots.1,piece.pos.1)).t == PieceType::Empty{
+    if first_square == piece.pos.0 && board.piece_at((jump_spots.0,piece.pos.1)).t == PieceType::Empty && board.piece_at((jump_spots.1,piece.pos.1)).t == PieceType::Empty{
         possible_moves.push((jump_spots.1,piece.pos.1));
     }
     if board.piece_at((jump_spots.0,piece.pos.1)).t == PieceType::Empty{
@@ -43,7 +43,7 @@ fn get_possible_pawn_moves(board: &mut BoardState,piece : &mut Piece) -> Vec<(i3
         possible_moves.push((piece.pos.0 + dir,piece.pos.1 + 1));
     }
 
-    if board.piece_at((piece.pos.0 + dir,piece.pos.1 - 1)).t != PieceType::Empty && board.piece_at((piece.pos.0 + dir,piece.pos.1 + 1)).c == piece.oppose(){
+    if board.piece_at((piece.pos.0 + dir,piece.pos.1 - 1)).t != PieceType::Empty && board.piece_at((piece.pos.0 + dir,piece.pos.1 - 1)).c == piece.oppose(){
         possible_moves.push((piece.pos.0 + dir,piece.pos.1 - 1));
     }
 
@@ -248,47 +248,60 @@ fn get_possible_king_moves(board: &mut BoardState,piece : &mut Piece) -> Vec<(i3
         }
     }
 
-    //ADD CASTLING
-    //white long castle is ugliest if ever 
-    if board.piece_at((0,0)).t == PieceType::Rook &&
-    board.piece_at((0,0)).castle_rights &&
-    board.piece_at((0,4)).castle_rights &&
-    board.piece_at((0,4)).c  == piece.c &&
-    board.piece_at((0,1)).t == PieceType::Empty  &&
-    board.piece_at((0,2)).t == PieceType::Empty  && 
-    board.piece_at((0,3)).t == PieceType::Empty{
-        possible_moves.push((0,2));
+    let white_long_clear  = [(0,1),(0,2),(0,3)];
+    let white_short_clear = [(0,5),(0,6)];
+    let black_long_clear  = [(7,1),(7,2),(7,3)];
+    let black_short_clear = [(7,5),(7,6)];
+
+    // squares the king passes through (incl. start & destination) — must not be attacked
+    let white_long_safe   = [(0,2),(0,3),(0,4)];
+    let white_short_safe  = [(0,4),(0,5),(0,6)];
+    let black_long_safe   = [(7,2),(7,3),(7,4)];
+    let black_short_safe  = [(7,4),(7,5),(7,6)];
+
+    // build attacked set; handle enemy king with raw steps to avoid recursion
+    let enemy_pieces: Vec<Piece> = board.playing_pieces.iter()
+        .filter(|p| p.c == opposing_color)
+        .copied()
+        .collect();
+    let mut attacked: HashSet<(i32,i32)> = HashSet::new();
+    for mut p in enemy_pieces {
+        if p.t == PieceType::King {
+            for i in -1i32..=1 { for j in -1i32..=1 {
+                let sq = (p.pos.0 + i, p.pos.1 + j);
+                if sq != p.pos && sq.0 >= 0 && sq.0 <= 7 && sq.1 >= 0 && sq.1 <= 7 {
+                    attacked.insert(sq);
+                }
+            }}
+        } else {
+            attacked.extend(get_possible_moves(board, &mut p));
+        }
     }
 
-    //white short castle is ugliest if ever 
-    if board.piece_at((0,7)).t == PieceType::Rook &&
-    board.piece_at((0,7)).castle_rights &&
-    board.piece_at((0,4)).castle_rights &&
-    board.piece_at((0,4)).c  == piece.c &&
-    board.piece_at((0,5)).t == PieceType::Empty  &&
-    board.piece_at((0,6)).t == PieceType::Empty{
-        possible_moves.push((0,6));
+    if piece.c == PieceColor::White && piece.castle_rights {
+        if board.piece_at((0,0)).t == PieceType::Rook && board.piece_at((0,0)).castle_rights
+        && white_long_clear.iter().all(|&sq| board.piece_at(sq).t == PieceType::Empty)
+        && white_long_safe.iter().all(|sq| !attacked.contains(sq)) {
+            possible_moves.push((0,2));
+        }
+        if board.piece_at((0,7)).t == PieceType::Rook && board.piece_at((0,7)).castle_rights
+        && white_short_clear.iter().all(|&sq| board.piece_at(sq).t == PieceType::Empty)
+        && white_short_safe.iter().all(|sq| !attacked.contains(sq)) {
+            possible_moves.push((0,6));
+        }
     }
 
-    //black long castle is ugliest if ever 
-    if board.piece_at((7,0)).t == PieceType::Rook &&
-    board.piece_at((7,0)).castle_rights &&
-    board.piece_at((7,4)).castle_rights &&
-    board.piece_at((7,4)).c  == piece.c &&
-    board.piece_at((7,1)).t == PieceType::Empty  &&
-    board.piece_at((7,2)).t == PieceType::Empty  && 
-    board.piece_at((7,3)).t == PieceType::Empty{
-        possible_moves.push((7,2));
-    }
-
-    //black short castle is ugliest if ever 
-    if board.piece_at((7,7)).t == PieceType::Rook &&
-    board.piece_at((7,7)).castle_rights &&
-    board.piece_at((7,4)).castle_rights &&
-    board.piece_at((7,4)).c  == piece.c &&
-    board.piece_at((7,5)).t == PieceType::Empty  &&
-    board.piece_at((7,6)).t == PieceType::Empty{
-        possible_moves.push((7,6));
+    if piece.c == PieceColor::Black && piece.castle_rights {
+        if board.piece_at((7,0)).t == PieceType::Rook && board.piece_at((7,0)).castle_rights
+        && black_long_clear.iter().all(|&sq| board.piece_at(sq).t == PieceType::Empty)
+        && black_long_safe.iter().all(|sq| !attacked.contains(sq)) {
+            possible_moves.push((7,2));
+        }
+        if board.piece_at((7,7)).t == PieceType::Rook && board.piece_at((7,7)).castle_rights
+        && black_short_clear.iter().all(|&sq| board.piece_at(sq).t == PieceType::Empty)
+        && black_short_safe.iter().all(|sq| !attacked.contains(sq)) {
+            possible_moves.push((7,6));
+        }
     }
 
     possible_moves

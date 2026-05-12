@@ -1,11 +1,15 @@
-use crate::board::{BoardState, Piece, PieceColor, PieceType, to_algebraic};
+use crate::board::{self, BoardState, Piece, PieceColor, PieceType, to_algebraic};
 use crate::piece_moves::*;
 
 
-fn is_pinned(board: &mut BoardState,piece: &mut Piece) -> bool{
+//board will have updated both to_move and board. just check if it can move:
+//has legal moves
+fn was_checkmated(board: &BoardState) -> bool{
     false
 }
 
-fn is_legal(board: &mut BoardState,pos: (i32,i32),new_pos: (i32,i32)){
-    
+//king is safe helper fn
+//use to_move to check if oppose color is seeing king
+fn is_checked(board: &BoardState) -> bool{
+    false
 }
