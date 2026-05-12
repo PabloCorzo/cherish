@@ -486,12 +486,22 @@ fn is_pinned(board: &mut BoardState,piece: &mut Piece,new_pos: (i32,i32)) -> boo
     let mut board2 = BoardState::new();
     board2.board = board.board.clone();
     board2.board[new_pos.0 as usize][new_pos.1 as usize] = piece.clone();
-    board2.board[piece.pos.0 as usize][piece.pos.1 as usize] = Piece { 
+    board2.board[piece.pos.0 as usize][piece.pos.1 as usize] = Piece {
         t: PieceType::Empty,
         c: PieceColor::Empty,
         pos: (piece.pos.0,piece.pos.1),
         castle_rights: false
     };
+
+    // sync playing_pieces with the simulated move: remove captured piece, update moved piece pos
+    board2.playing_pieces = board.playing_pieces
+        .iter()
+        .filter(|p| p.pos != new_pos)
+        .cloned()
+        .collect();
+    if let Some(p) = board2.playing_pieces.iter_mut().find(|p| p.pos == piece.pos) {
+        p.pos = new_pos;
+    }
 
     let king_pos = board.playing_pieces
     .iter()
