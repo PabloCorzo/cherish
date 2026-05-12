@@ -1,5 +1,5 @@
 use crate::board::{self, BoardState, Piece, PieceColor, PieceType, to_algebraic};
-use std::collections::HashSet;
+use std::{collections::{HashMap, HashSet}, ops::Index};
 
 pub fn get_possible_moves(board: &mut BoardState,piece : &mut Piece) -> Vec<(i32,i32)>{
     let possible_moves: Vec<(i32,i32)> = match piece.t{
@@ -451,15 +451,72 @@ pub fn move_to_notation(board: &mut BoardState,piece: &mut Piece,new_pos: (i32,i
     s
 }
 
-pub fn get_player_possible_moves(board: &mut BoardState,c: PieceColor)-> Vec<String>{    
-    let mut moves = Vec::new();
+
+pub fn get_player_possible_moves(board: &mut BoardState,c: PieceColor) -> HashMap<(i32,i32),Vec<(i32,i32)>>{    
+    let mut moves = HashMap::new();
     let mut pieces = board.playing_pieces.clone();
     for piece in pieces.iter_mut(){
         if piece.c != c{continue;} 
+        moves.insert(piece.pos,Vec::new());
         let piece_moves = get_possible_moves(board, piece);
-        for piece_move in piece_moves.iter(){
-            moves.push(move_to_notation(board, piece, *piece_move));
+        let v = moves.get_mut(&piece.pos).unwrap();
+        for piece_move in piece_moves.into_iter(){
+            let p = *&piece_move.clone();
+            v.push(p);
         }
     }
     moves
+}
+
+fn is_pinned(board: &mut BoardState,piece: &mut Piece,new_pos: (i32,i32)) -> bool{
+
+    let mut board2 = BoardState::new();
+    board2.board = board.board.clone();
+    board2.board[new_pos.0 as usize][new_pos.1 as usize] = piece.clone();
+    board2.board[piece.pos.0 as usize][piece.pos.1 as usize] = Piece { 
+        t: PieceType::Empty,
+        c: PieceColor::Empty,
+        pos: (piece.pos.0,piece.pos.1),
+        castle_rights: false
+    };
+
+    let king_pos = board.playing_pieces
+    .iter()
+    .find(|p|p.t == PieceType::King && p.c == piece.c)
+    .expect("King is not in playing pieces? how bro").pos;
+
+    let enemy_c = piece.oppose();
+    let in_check = get_player_possible_moves(&mut board2, enemy_c)
+    .values()
+    .flatten()
+    .any(|&pos| pos == king_pos);
+    in_check
+}
+
+pub fn get_player_legal_moves(board: &mut BoardState, c: PieceColor) -> HashMap<(i32,i32), Vec<(i32,i32)>> {
+    
+    let possible_moves: HashMap<(i32, i32), Vec<(i32, i32)>> = get_player_possible_moves(board, c);
+
+    possible_moves
+        .into_iter()
+        .filter_map(|(piece_pos, moves)| {
+            // Clone the piece out before any borrow of board inside the closure
+            let mut piece = board.playing_pieces
+                .iter()
+                .find(|p| p.pos == piece_pos)
+                .unwrap()
+                .clone();
+
+            let legal: Vec<(i32, i32)> = moves
+                .into_iter()
+                .filter(|&new_pos| !is_pinned(board, &mut piece, new_pos))
+                .collect();
+
+            if legal.is_empty() {
+                None
+            } else {
+                Some((piece_pos, legal))
+            }
+        })
+        .collect()
 }
