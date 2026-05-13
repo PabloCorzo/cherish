@@ -1,7 +1,7 @@
 use crate::board::{self, BoardState, Piece, PieceColor, PieceType, to_algebraic};
 use std::{collections::{HashMap, HashSet}, ops::Index};
 
-pub fn get_possible_moves(board: &mut BoardState,piece : &mut Piece) -> Vec<(i32,i32)>{
+pub fn get_possible_moves(board: &BoardState,piece : &mut Piece) -> Vec<(i32,i32)>{
     let possible_moves: Vec<(i32,i32)> = match piece.t{
         PieceType::Pawn => get_possible_pawn_moves(board,piece),
         PieceType::Rook => get_possible_rook_moves(board,piece),    
@@ -14,7 +14,7 @@ pub fn get_possible_moves(board: &mut BoardState,piece : &mut Piece) -> Vec<(i32
     possible_moves
 }
 
-fn get_possible_pawn_moves(board: &mut BoardState,piece : &mut Piece) -> Vec<(i32,i32)> {
+fn get_possible_pawn_moves(board: &BoardState,piece : &mut Piece) -> Vec<(i32,i32)> {
     
     let mut possible_moves: Vec<(i32,i32)> = Vec::new();
     let (first_square,jump_spots) = match piece.c {
@@ -39,23 +39,23 @@ fn get_possible_pawn_moves(board: &mut BoardState,piece : &mut Piece) -> Vec<(i3
         None => {},
     }
     //captures
-    if board.piece_at((piece.pos.0 + dir,piece.pos.1 + 1)).t != PieceType::Empty && board.piece_at((piece.pos.0 + dir,piece.pos.1 + 1)).c == piece.oppose(){
+    if board.piece_at((piece.pos.0 + dir,piece.pos.1 + 1)).t != PieceType::Empty && board.piece_at((piece.pos.0 + dir,piece.pos.1 + 1)).c == piece.c.oppose(){
         possible_moves.push((piece.pos.0 + dir,piece.pos.1 + 1));
     }
 
-    if board.piece_at((piece.pos.0 + dir,piece.pos.1 - 1)).t != PieceType::Empty && board.piece_at((piece.pos.0 + dir,piece.pos.1 - 1)).c == piece.oppose(){
+    if board.piece_at((piece.pos.0 + dir,piece.pos.1 - 1)).t != PieceType::Empty && board.piece_at((piece.pos.0 + dir,piece.pos.1 - 1)).c == piece.c.oppose(){
         possible_moves.push((piece.pos.0 + dir,piece.pos.1 - 1));
     }
 
     possible_moves
 }
 
-fn get_possible_rook_moves(board: &mut BoardState,piece : &mut Piece) -> Vec<(i32,i32)> {
+fn get_possible_rook_moves(board: &BoardState,piece : &mut Piece) -> Vec<(i32,i32)> {
 
     let mut possible_moves: Vec<(i32,i32)> = Vec::new();
     
-    fn moves_single_direction(board: &mut BoardState, direction: (i32,i32),squares: i32,piece : &mut Piece) -> Vec<(i32,i32)>{
-        let opposing_color = piece.oppose();
+    fn moves_single_direction(board: &BoardState, direction: (i32,i32),squares: i32,piece : &mut Piece) -> Vec<(i32,i32)>{
+        let opposing_color = piece.c.oppose();
         let mut moves: Vec<(i32,i32)> = Vec::new();
             for i in 1..=squares{
                 let new_pos = (piece.pos.0 + (i*direction.0),piece.pos.1 + (i*direction.1));
@@ -108,10 +108,10 @@ fn get_possible_rook_moves(board: &mut BoardState,piece : &mut Piece) -> Vec<(i3
     possible_moves
 }
 
-fn get_possible_knight_moves(board: &mut BoardState,piece : &mut Piece) -> Vec<(i32,i32)> {
+fn get_possible_knight_moves(board: &BoardState,piece : &mut Piece) -> Vec<(i32,i32)> {
 
     let mut possible_moves: Vec<(i32,i32)> = Vec::new();
-    let opposing_color = piece.oppose();
+    let opposing_color = piece.c.oppose();
     let mut jumps:Vec<(i32,i32)> = Vec::new();
         jumps.push((piece.pos.0 + 2,piece.pos.1 - 1));
         jumps.push((piece.pos.0 + 2,piece.pos.1 + 1));
@@ -141,10 +141,10 @@ fn get_possible_knight_moves(board: &mut BoardState,piece : &mut Piece) -> Vec<(
 
 }
 
-fn get_possible_bishop_moves(board: &mut BoardState,piece : &mut Piece) -> Vec<(i32,i32)> {
+fn get_possible_bishop_moves(board: &BoardState,piece : &mut Piece) -> Vec<(i32,i32)> {
 
     let mut possible_moves: Vec<(i32,i32)> = Vec::new();
-    let opposing_color = piece.oppose();
+    let opposing_color = piece.c.oppose();
 
     fn squares_to_edge(position: (i32,i32),d: (i32,i32)) -> i32{
         let mut squares: i32 = 1;
@@ -157,7 +157,7 @@ fn get_possible_bishop_moves(board: &mut BoardState,piece : &mut Piece) -> Vec<(
         squares - 1
     }
     
-    fn possible_diagonal_single_direction(board: &mut BoardState,piece: &mut Piece,squares_ahead: i32,direction: (i32, i32),opposing_color: PieceColor) -> Vec<(i32,i32)>{
+    fn possible_diagonal_single_direction(board: &BoardState,piece: &mut Piece,squares_ahead: i32,direction: (i32, i32),opposing_color: PieceColor) -> Vec<(i32,i32)>{
         let mut moves: Vec<(i32,i32)> = Vec::new();
         for i in 1..=squares_ahead{
             let new_pos = ((piece.pos.0 + (i * direction.0)),(piece.pos.1 + (i * direction.1)));
@@ -211,7 +211,7 @@ fn get_possible_bishop_moves(board: &mut BoardState,piece : &mut Piece) -> Vec<(
 }
 
 
-fn get_possible_queen_moves(board: &mut BoardState,piece : &mut Piece) -> Vec<(i32,i32)> {
+fn get_possible_queen_moves(board: &BoardState,piece : &mut Piece) -> Vec<(i32,i32)> {
     
     let possible_moves: Vec<(i32, i32)> = [
         get_possible_rook_moves(board, piece),
@@ -226,10 +226,10 @@ fn get_possible_queen_moves(board: &mut BoardState,piece : &mut Piece) -> Vec<(i
 possible_moves
 }
 
-fn get_possible_king_moves(board: &mut BoardState,piece : &mut Piece) -> Vec<(i32,i32)> {
+fn get_possible_king_moves(board: &BoardState,piece : &mut Piece) -> Vec<(i32,i32)> {
 
     let mut possible_moves: Vec<(i32,i32)> = Vec::new();
-    let opposing_color = piece.oppose();
+    let opposing_color = piece.c.oppose();
     for i in -1..2{
         for j in -1..2{
             let new_pos = (piece.pos.0 + i,piece.pos.1 + j);
@@ -308,7 +308,7 @@ fn get_possible_king_moves(board: &mut BoardState,piece : &mut Piece) -> Vec<(i3
 
 }
 
-fn is_capture(board: &mut BoardState, pos: (i32,i32),new_pos: (i32,i32)) -> bool{
+fn is_capture(board: &BoardState, pos: (i32,i32),new_pos: (i32,i32)) -> bool{
 
     //check for en passant!
     match board.en_passant{
@@ -323,7 +323,7 @@ fn is_capture(board: &mut BoardState, pos: (i32,i32),new_pos: (i32,i32)) -> bool
     return board.piece_at((new_pos.0,new_pos.1)).t != PieceType::Empty;
 }
 
-fn is_castle(board: &mut BoardState,pos: (i32,i32),new_pos: (i32,i32)) -> &str{
+fn is_castle(board: &BoardState,pos: (i32,i32),new_pos: (i32,i32)) -> &str{
     
     let is_king = board.piece_at(pos).t == PieceType::King;
     let is_horizontal = pos.0 == new_pos.0;
@@ -338,7 +338,7 @@ fn is_castle(board: &mut BoardState,pos: (i32,i32),new_pos: (i32,i32)) -> &str{
 
 }
 
-fn is_promotion(board: &mut BoardState, pos: (i32,i32),new_pos: (i32,i32)) -> bool{
+fn is_promotion(board: &BoardState, pos: (i32,i32),new_pos: (i32,i32)) -> bool{
     let p = board.piece_at(pos);
     
     p.t == PieceType::Pawn && ((p.c == PieceColor::Black && new_pos.0 == 0) || (p.c == PieceColor::White && new_pos.0 == 7))
@@ -356,9 +356,9 @@ fn initial(t: PieceType) -> char{
     }
 }
 
-pub fn doubled_piece_attacks_vertical(board: &mut BoardState,pos: (i32,i32),piece: &mut Piece) -> bool{
+pub fn doubled_piece_attacks_vertical(board: &BoardState,pos: (i32,i32),piece: &mut Piece) -> bool{
     
-    let opposing_color = piece.oppose();
+    let opposing_color = piece.c.oppose();
     for i in 0..8{
         if i == piece.pos.0 {continue}
         let mut p2 = board.piece_at((i,piece.pos.1));
@@ -370,9 +370,9 @@ pub fn doubled_piece_attacks_vertical(board: &mut BoardState,pos: (i32,i32),piec
     false
 }
 
-pub fn doubled_piece_attacks_horizontal(board: &mut BoardState,pos: (i32,i32),piece: &mut Piece) -> bool{
+pub fn doubled_piece_attacks_horizontal(board: &BoardState,pos: (i32,i32),piece: &mut Piece) -> bool{
     
-    let opposing_color = piece.oppose();
+    let opposing_color = piece.c.oppose();
     for i in 0..8{
         if i == piece.pos.1 {continue}
         let mut p2 = board.piece_at((piece.pos.0,i));
@@ -385,7 +385,7 @@ pub fn doubled_piece_attacks_horizontal(board: &mut BoardState,pos: (i32,i32),pi
 }
 
 pub fn doubled_assymetrical_horses_attack(board: &mut BoardState,pos: (i32,i32),piece: &mut Piece) -> bool{
-    let opposing_color = piece.oppose();
+    let opposing_color = piece.c.oppose();
     let mut horses: Vec<Piece> = Vec::new();
     let mut potential_knight_count = 0;
     for p in board.playing_pieces.iter_mut(){
@@ -465,7 +465,7 @@ pub fn move_to_notation(board: &mut BoardState,piece: &mut Piece,new_pos: (i32,i
 }
 
 
-pub fn get_player_possible_moves(board: &mut BoardState,c: PieceColor) -> HashMap<(i32,i32),Vec<(i32,i32)>>{    
+pub fn get_player_possible_moves(board: &BoardState,c: PieceColor) -> HashMap<(i32,i32),Vec<(i32,i32)>>{    
     let mut moves = HashMap::new();
     let mut pieces = board.playing_pieces.clone();
     for piece in pieces.iter_mut(){
@@ -481,7 +481,7 @@ pub fn get_player_possible_moves(board: &mut BoardState,c: PieceColor) -> HashMa
     moves
 }
 
-fn is_pinned(board: &mut BoardState,piece: &mut Piece,new_pos: (i32,i32)) -> bool{
+fn is_pinned(board: &BoardState,piece: &mut Piece,new_pos: (i32,i32)) -> bool{
 
     let mut board2 = BoardState::new();
     board2.board = board.board.clone();
@@ -508,15 +508,15 @@ fn is_pinned(board: &mut BoardState,piece: &mut Piece,new_pos: (i32,i32)) -> boo
     .find(|p|p.t == PieceType::King && p.c == piece.c)
     .expect("King is not in playing pieces? how bro").pos;
 
-    let enemy_c = piece.oppose();
-    let in_check = get_player_possible_moves(&mut board2, enemy_c)
+    let enemy_c = piece.c.oppose();
+    let in_check = get_player_possible_moves(&board2, enemy_c)
     .values()
     .flatten()
     .any(|&pos| pos == king_pos);
     in_check
 }
 
-pub fn get_player_legal_moves(board: &mut BoardState, c: PieceColor) -> HashMap<(i32,i32), Vec<(i32,i32)>> {
+pub fn get_player_legal_moves(board: &BoardState, c: PieceColor) -> HashMap<(i32,i32), Vec<(i32,i32)>> {
     
     let possible_moves: HashMap<(i32, i32), Vec<(i32, i32)>> = get_player_possible_moves(board, c);
 
@@ -532,7 +532,7 @@ pub fn get_player_legal_moves(board: &mut BoardState, c: PieceColor) -> HashMap<
 
             let legal: Vec<(i32, i32)> = moves
                 .into_iter()
-                .filter(|&new_pos| !is_pinned(board, &mut piece, new_pos))
+                .filter(|&new_pos| !is_pinned(&board, &mut piece, new_pos))
                 .collect();
 
             if legal.is_empty() {

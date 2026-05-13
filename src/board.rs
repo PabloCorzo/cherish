@@ -51,10 +51,15 @@ impl BoardState{
         };
         board_state 
     }
-    pub fn piece_at(&mut self,pos: (i32,i32)) -> Piece {
+    pub fn piece_at(&self,pos: (i32,i32)) -> Piece {
         //if clause for pawns checking diagonally in the edges of the board
         if pos.0 < 0 || pos.0 > 7 ||pos.1 < 0 || pos.1 > 7 {return Piece { t: PieceType::Empty, c: PieceColor::Empty,pos: (-1,-1), castle_rights: false };}  
         self.board[pos.0 as usize][pos.1 as usize]
+    }
+    pub fn move_piece(&mut self,piece: &mut Piece, pos: (i32,i32)){
+        self.board[piece.pos.0 as usize][pos.1 as usize] = Piece::new(PieceType::Empty,PieceColor::Empty, piece.pos);
+        piece.pos = pos;
+        self.board[pos.0 as usize][pos.1 as usize] = *piece;
     }
 
 }
@@ -84,7 +89,22 @@ impl Piece{
     }
 }
 #[derive(Debug,Copy,Clone,PartialEq)]
-pub enum PieceColor{Black,White,Empty}
+pub enum PieceColor{
+    Black,
+    White,
+    Empty
+}
+impl PieceColor{
+    pub fn oppose(&self) -> Self{
+        match self{
+            Self::Black => PieceColor::White,
+            Self::White => PieceColor::Black,
+            Self::Empty => PieceColor::Empty,
+        }
+    }
+}
+
+
 
 #[derive(Debug,Copy,Clone,PartialEq)]
 pub enum PieceType{
