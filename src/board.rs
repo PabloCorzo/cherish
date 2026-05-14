@@ -14,7 +14,7 @@ impl BoardState{
         //pawn rows
         for i in 0..8{
             board[1][i] = Piece::new(PieceType::Pawn, PieceColor::White, (1,i as i32));
-            board[6][i] = Piece::new(PieceType::Pawn, PieceColor::Black, (1,i as i32));
+            board[6][i] = Piece::new(PieceType::Pawn, PieceColor::Black, (6,i as i32));
         }
         //white backrank
         board[0][0] = Piece::new(PieceType::Rook, PieceColor::White, (0,0));  
@@ -56,10 +56,15 @@ impl BoardState{
         if pos.0 < 0 || pos.0 > 7 ||pos.1 < 0 || pos.1 > 7 {return Piece { t: PieceType::Empty, c: PieceColor::Empty,pos: (-1,-1), castle_rights: false };}  
         self.board[pos.0 as usize][pos.1 as usize]
     }
-    pub fn move_piece(&mut self,piece: &mut Piece, pos: (i32,i32)){
-        self.board[piece.pos.0 as usize][pos.1 as usize] = Piece::new(PieceType::Empty,PieceColor::Empty, piece.pos);
+    pub fn move_piece(&mut self, piece: &mut Piece, pos: (i32,i32)){
+        let old_pos = piece.pos;
+        self.board[old_pos.0 as usize][old_pos.1 as usize] = Piece::new(PieceType::Empty, PieceColor::Empty, old_pos);
         piece.pos = pos;
         self.board[pos.0 as usize][pos.1 as usize] = *piece;
+        // keep playing_pieces in sync: replace old entry with updated piece
+        if let Some(p) = self.playing_pieces.iter_mut().find(|p| p.pos == old_pos) {
+            *p = *piece;
+        }
     }
 
 }
@@ -88,7 +93,7 @@ impl Piece{
         color
     }
 }
-#[derive(Debug,Copy,Clone,PartialEq)]
+#[derive(Debug,Copy,Clone,PartialEq,Eq,Hash)]
 pub enum PieceColor{
     Black,
     White,
@@ -106,7 +111,7 @@ impl PieceColor{
 
 
 
-#[derive(Debug,Copy,Clone,PartialEq)]
+#[derive(Debug,Copy,Clone,PartialEq,Eq,Hash)]
 pub enum PieceType{
     Pawn,
     Rook,

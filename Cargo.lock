@@ -659,6 +659,7 @@ dependencies = [
 name = "cherish"
 version = "0.1.0"
 dependencies = [
+ "image",
  "ratatui",
  "slint",
 ]

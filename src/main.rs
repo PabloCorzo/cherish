@@ -6,7 +6,10 @@ mod render;
 mod input;
 
 use std::env;
+use std::io::stdout;
 use game_controller::*;
+use ratatui::{Terminal, backend::CrosstermBackend};
+use ratatui::crossterm::terminal::{enable_raw_mode, disable_raw_mode};
 
 fn main() {
 
@@ -22,13 +25,19 @@ fn main() {
     if play_mode != "tui" && play_mode != "gui"{play_mode = String::from("tui");}
 
 
-    let game = GameManager::new();
+    let mut game = GameManager::new();
 
     game.set_config(&play_mode);
 
-    //IF TUI, DO A RATATUI INIT AND USE TERMINAL
-    //IF GUI, DO WHATEVER SLINT NEEDS TO DO TO DRAW ITS GUI
-
-    game.play_game(terminal);
+    if play_mode == "tui" {
+        enable_raw_mode().unwrap();
+        let backend = CrosstermBackend::new(stdout());
+        let mut terminal = Terminal::new(backend).unwrap();
+        terminal.clear().unwrap();
+        let _ = game.play_game(Some(&mut terminal));
+        disable_raw_mode().unwrap();
+    } else {
+        let _ = game.play_game(None);
+    }
 
 }
