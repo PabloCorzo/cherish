@@ -4,14 +4,15 @@ use std::sync::{Arc, Mutex};
 use slint::{ModelRc, VecModel};
 use crate::board::{BoardState, get_icon};
 
-fn input_tui() -> String{                                                                                                                                                                            
-      print!("Enter your move: ");                                                                                                                                                                     
-      io::stdout().flush().unwrap();                                                                                                                                                                   
-                                                                                                                                                                                                       
-      let mut input = String::new();                                                                                                                                                                   
-      io::stdin().read_line(&mut input).unwrap();                                                                                                                                                      
-      let play = input.trim().clone();                                                                                                                                                                 
-      play.into()                                                                                                                                                                                      
+pub fn input_tui() -> String{                                                                                                                                                                            
+    print!("Enter your move: ");                                                                                                                                                                     
+    io::stdout().flush().unwrap();                                                                                                                                                                   
+                                                                                                                                                                                                     
+    let mut input = String::new();                                                                                                                                                                   
+    io::stdin().read_line(&mut input).unwrap();                                                                                                                                                      
+    let play = input.trim().clone();
+
+    play.into()                                                                                                                                                                                      
                                                                                                                                                                                                        
   }            
 

@@ -1,11 +1,20 @@
-use crate::board::{self, BoardState, Piece, PieceColor, PieceType, to_algebraic};
-use crate::piece_moves::*;
+use core::panic;
+use std::char;
+use std::io::Stdout;
 
+use crate::board::{self, BoardState, Piece, PieceColor, PieceType,get_row_num};
+use crate::piece_moves::*;
+use crate::render::*;
+use crate::input::*;
+use ratatui::backend::CrosstermBackend;
+use ratatui::crossterm::terminal;
+use ratatui::layout::Rect;
+use ratatui::{Frame,Terminal};
 
 //board will have updated both to_move and board. just check if it can move:
 //has legal moves
 //check playing color or color to play
-fn is_checkmated(board: &BoardState) -> bool{
+pub fn is_checkmate(board: &BoardState) -> bool{
     
     //Has moves
     let has_moves = get_player_legal_moves(board, board.to_move).is_empty();
@@ -16,7 +25,7 @@ fn is_checkmated(board: &BoardState) -> bool{
     !has_moves && in_check
 }
 
-fn is_stalemate(board: &BoardState) -> bool{
+pub fn is_stalemate(board: &BoardState) -> bool{
     
     //Has moves
     let has_moves = get_player_legal_moves(board, board.to_move).is_empty();
@@ -94,7 +103,7 @@ fn player_move(board: &mut BoardState, piece: &mut Piece, pos: (i32,i32)) -> &'s
     board.to_move = board.to_move.oppose();
 
     // determine result
-    let checkmate = is_checkmated(board);
+    let checkmate = is_checkmate(board);
     let stalemate = is_stalemate(board);
     match (checkmate,stalemate) {
         (true,true) => panic!("Cant be stalemated and checkmated at once."),
@@ -105,7 +114,121 @@ fn player_move(board: &mut BoardState, piece: &mut Piece, pos: (i32,i32)) -> &'s
 }
 
 
-struct game_controller{
-    input: fn() -> &'static str,
-    render: fn(&BoardState),
+pub fn validate_input(board: &BoardState,input: String) -> (bool,[i32;4]){
+
+    let mut arr = [0;4];
+
+    if input.len() != 5 {panic!("move is too short.")}
+
+    let input: String = input.chars().enumerate().map(|(i, c)| {
+    if i == 0 && c.is_numeric() {
+        char::from_digit(get_row_num(c) as u32, 10).unwrap()
+    }else if i == 3 && c.is_numeric(){
+        char::from_digit(get_row_num(c) as u32, 10).unwrap()
+    }
+     else {
+        c
+    }
+}).collect();
+
+    //enforce rule:
+    //5 chars that have to be i32 i32 space i32 i32
+    for i in input.chars().enumerate(){
+        if i.0 == 2 && i.1 != ' '{return (false,arr);}
+        else if !i.1.is_numeric(){return (false,arr);}
+    }
+
+    //enforce first spot is not empty and second sport does not have piece of same color
+    let first_spot = (input.chars().nth(0).unwrap() as i32,input.chars().nth(0).unwrap() as i32);
+    let second_spot = (input.chars().nth(1).unwrap() as i32,input.chars().nth(1).unwrap() as i32);
+
+    if board.piece_at(first_spot).t == PieceType::Empty || (board.piece_at(first_spot).c == board.piece_at(second_spot).c){
+        return (false,arr)
+    }
+
+    arr[0] = first_spot.0;
+    arr[1] = first_spot.1;
+    arr[2] = second_spot.0;
+    arr[3] = second_spot.1;
+
+    (true,arr)
+
+}
+
+pub enum PlayMode{
+    Tui,
+    Gui,
+}
+pub struct GameManager{
+    board: BoardState,
+    config: PlayMode,
+    frame: Option<Rect>,  // Frame itself takes a lifetime
+}
+
+impl GameManager{     
+    pub fn new() -> Self {
+        GameManager {
+            board: BoardState::new(),
+            config: PlayMode::Tui,
+            frame: None,   // start with None, assign later
+        }
+    }
+
+    pub fn new_board(&mut self){
+        self.board = BoardState::new();
+    }
+    pub fn set_config(&mut self,play_mode: &str){
+
+        let mode = match play_mode{
+            "tui" => PlayMode::Tui,
+            "gui" => PlayMode::Gui,
+            &_ => panic!("cant set invalid mode")
+        };
+        self.config = mode;
+    }
+
+    pub fn set_rect(&mut self,rect : Rect){
+        self.frame = Some(rect);
+    }
+
+    pub fn play_game(&mut self, mut terminal: Option<&mut Terminal<CrosstermBackend<Stdout>>>) -> Result<(),String> {
+    if is_checkmate(&self.board) || is_stalemate(&self.board) {
+        panic!("Game is over before starting");
+    }
+
+    let mut state = "none";
+
+    while state == "none" {
+
+        // let valid_input = validate_input(&self.board,"foo".into());
+        let s = String::from("foo");
+        let mut input = validate_input(&self.board, s);
+        while !input.0{
+            
+
+            // draw board every input until valid input
+            if let Some(ref mut term) = terminal {
+            let _ = term.draw(|f| {
+                let rect = f.area();
+                render_board_tui(f, &self.board, rect);
+            });
+            }else{
+            render_board_gui(&self.board);
+            }
+
+
+            let s = match self.config{
+                PlayMode::Gui => input_gui(&self.board),
+                PlayMode::Tui => input_tui(),
+            };
+            input = validate_input(&self.board, s);
+        }
+        let mut piece = self.board.piece_at((input.1[0],input.1[1],));
+        let pos = (input.1[2],input.1[3]);
+
+        state = player_move(&mut self.board, &mut piece, pos);
+    }
+
+    Ok(())
+}
 }
