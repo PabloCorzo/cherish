@@ -1,0 +1,4 @@
+Legal move collection should check if a move checks yourself (pin), dont think its doing that as of now.
+terminal board print w/o tui
+local socket connection and boardstate transfer for IPC
+python DL model perchance
