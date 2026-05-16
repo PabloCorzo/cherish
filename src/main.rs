@@ -22,11 +22,12 @@ fn main() {
 
     if play_mode != "tui" && play_mode != "gui" && play_mode != "cli" {play_mode = String::from("cli");}
 
+    let log: bool = args.iter().any(|arg| arg == "-log");
 
     let mut game = GameManager::new();
 
     game.set_config(&play_mode);
 
-    let _ = game.play_game();
+    let _ = game.play_game(log);
 
 }

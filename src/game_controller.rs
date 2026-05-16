@@ -4,6 +4,10 @@ use crate::piece_moves::*;
 use crate::render::*;
 use crate::input::*;
 
+use std::fs::{File,OpenOptions};
+use std::io::{BufWriter, Write};
+use std::time::{SystemTime, UNIX_EPOCH};
+
 
 //board will have updated both to_move and board. just check if it can move:
 //has legal moves
@@ -104,7 +108,6 @@ fn player_move(board: &mut BoardState, piece: &mut Piece, pos: (i32,i32)) -> &'s
     }
 }
 
-
 pub fn validate_input(board: &BoardState, input: String) -> (bool, [i32; 4]) {
     let mut arr = [0i32; 4];
     let chars: Vec<char> = input.chars().collect();
@@ -144,13 +147,26 @@ pub enum PlayMode{
 pub struct GameManager{
     board: BoardState,
     config: PlayMode,
+    log_file: File,
+    move_count: i32,
 }
 
 impl GameManager{
     pub fn new() -> Self {
+
+        let ts = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_secs();
+
         GameManager {
             board: BoardState::new(),
             config: PlayMode::Tui,
+            log_file:  OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(format!("{}.log", ts)).expect("could not open file"),
+        move_count: 0,
         }
     }
 
@@ -169,8 +185,18 @@ impl GameManager{
         self.config = mode;
     }
 
+    fn log(&mut self,moves: ((i32,i32),(i32,i32))){
 
-    pub fn play_game(&mut self) -> Result<(),String> {
+        let piece = &mut self.board.piece_at(moves.0);
+        let str = move_to_notation(&mut self.board, piece, moves.1);
+
+        let mut writer = BufWriter::new(&mut self.log_file);
+        let line = format!("{}:{}",char::from_digit(self.move_count as u32, 10).unwrap(),str);
+        writeln!(writer, "{}",line).expect("Could not log move.");
+    }
+
+    pub fn play_game(&mut self,log: bool) -> Result<(),String> {
+
         if is_checkmate(&self.board) || is_stalemate(&self.board) {
             panic!("Game is over before starting");
         }
@@ -193,7 +219,11 @@ impl GameManager{
             }
             let turn = ((moves[0],moves[1]),(moves[2],moves[3]));
             let mut piece = self.board.piece_at(turn.0);
+
+            if log{self.log(turn)}
+            
             state = player_move(&mut self.board,&mut piece, turn.1);
+            self.move_count = self.move_count + 1;
         }
 
         Ok(())      
