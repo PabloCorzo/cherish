@@ -1,5 +1,5 @@
-use crate::board::{self, BoardState, Piece, PieceColor, PieceType, to_algebraic};
-use std::{collections::{HashMap, HashSet}, ops::Index};
+use crate::board::{BoardState, Piece, PieceColor, PieceType,to_algebraic};
+use std::{collections::{HashMap, HashSet}};
 
 pub fn get_possible_moves(board: &BoardState,piece : &mut Piece) -> Vec<(i32,i32)>{
     let possible_moves: Vec<(i32,i32)> = match piece.t{
@@ -52,8 +52,6 @@ fn get_possible_pawn_moves(board: &BoardState,piece : &mut Piece) -> Vec<(i32,i3
 
 fn get_possible_rook_moves(board: &BoardState,piece : &mut Piece) -> Vec<(i32,i32)> {
 
-    let mut possible_moves: Vec<(i32,i32)> = Vec::new();
-    
     fn moves_single_direction(board: &BoardState, direction: (i32,i32),squares: i32,piece : &mut Piece) -> Vec<(i32,i32)>{
         let opposing_color = piece.c.oppose();
         let mut moves: Vec<(i32,i32)> = Vec::new();
@@ -143,7 +141,6 @@ fn get_possible_knight_moves(board: &BoardState,piece : &mut Piece) -> Vec<(i32,
 
 fn get_possible_bishop_moves(board: &BoardState,piece : &mut Piece) -> Vec<(i32,i32)> {
 
-    let mut possible_moves: Vec<(i32,i32)> = Vec::new();
     let opposing_color = piece.c.oppose();
 
     fn squares_to_edge(position: (i32,i32),d: (i32,i32)) -> i32{

@@ -124,18 +124,19 @@ pub enum PieceType{
 
 pub fn get_icon(piece: &Piece) -> char{
     let icon = match (piece.t,piece.c){
-        (PieceType::Pawn,PieceColor::White) => '♙',
-        (PieceType::Rook,PieceColor::White) => '♖',
-        (PieceType::Knight,PieceColor::White) => '♘',
-        (PieceType::Bishop,PieceColor::White) => '♗',
-        (PieceType::Queen,PieceColor::White) => '♕',
-        (PieceType::King,PieceColor::White) => '♔',
-        (PieceType::Pawn,PieceColor::Black) => '♟',
-        (PieceType::Rook,PieceColor::Black) => '♜',
-        (PieceType::Knight,PieceColor::Black) => '♞',
-        (PieceType::Bishop,PieceColor::Black) => '♝',
-        (PieceType::Queen,PieceColor::Black) => '♛',
-        (PieceType::King,PieceColor::Black) => '♚',
+        (PieceType::Pawn,PieceColor::Black) => '♙',
+        (PieceType::Rook,PieceColor::Black) => '♖',
+        (PieceType::Knight,PieceColor::Black) => '♘',
+        (PieceType::Bishop,PieceColor::Black) => '♗',
+        (PieceType::Queen,PieceColor::Black) => '♕',
+        (PieceType::King,PieceColor::Black) => '♔',
+
+        (PieceType::Pawn,PieceColor::White) => '♟',
+        (PieceType::Rook,PieceColor::White) => '♜',
+        (PieceType::Knight,PieceColor::White) => '♞',
+        (PieceType::Bishop,PieceColor::White) => '♝',
+        (PieceType::Queen,PieceColor::White) => '♛',
+        (PieceType::King,PieceColor::White) => '♚',
         (PieceType::Empty,_)  => ' ',
         (_,PieceColor::Empty) => panic!("Piece has no color? how do you manage that"),
 };
