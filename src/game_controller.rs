@@ -1,5 +1,5 @@
 
-use crate::board::{BoardState, Piece, PieceColor, PieceType,get_row_num};
+use crate::board::{BoardState, Piece, PieceColor, PieceType,get_row_num,to_algebraic};
 use crate::piece_moves::*;
 use crate::render::*;
 use crate::input::*;
@@ -36,23 +36,6 @@ pub fn is_stalemate(board: &BoardState) -> bool{
     //              board repeats 3 times             //
 }
 
-//king is safe helper fn
-//use to_move to check if oppose color is seeing king
-fn is_checked(board: &BoardState, c: PieceColor) -> bool{
-
-    let king_pos = board.playing_pieces
-    .iter()
-    .find(|p| p.c == c && p.t == PieceType::King)
-    .expect(&format!("Player {:?} has no king in piece vector", c))
-    .pos;
-
-    get_player_legal_moves(board, c.oppose())
-    .values()
-    .flatten()
-    .any(|p| *p == king_pos)
-    
-
-}
 
 
 //assumes given move is valid. use wisely or it will break boardstate!
@@ -115,28 +98,52 @@ pub fn validate_input(board: &BoardState, input: String) -> (bool, [i32; 4]) {
     // expect "e2 e4" format: file rank space file rank
     if chars.len() != 5 || chars[2] != ' ' { return (false, arr); }
 
+    //from and to
     let (f1, r1, f2, r2) = (chars[0], chars[1], chars[3], chars[4]);
 
+    //goes letter num letter num
     let valid_file = |c: char| matches!(c.to_ascii_lowercase(), 'a'..='h');
     if !valid_file(f1) || !valid_file(f2) { return (false, arr); }
     if !r1.is_ascii_digit() || !r2.is_ascii_digit() { return (false, arr); }
 
+    //transform to numbers
     let from_col = get_row_num(f1);
     let from_row = r1 as i32 - '1' as i32;
     let to_col   = get_row_num(f2);
     let to_row   = r2 as i32 - '1' as i32;
 
+    //bounds check
     if from_row < 0 || from_row > 7 || to_row < 0 || to_row > 7 { return (false, arr); }
 
+    //theres a piece there of player color
     let from_piece = board.piece_at((from_row, from_col));
-    if from_piece.t == PieceType::Empty { return (false, arr); }
+    if from_piece.t == PieceType::Empty || from_piece.c != board.to_move{ return (false, arr); }
 
+    //there is no ally piece on dest
     let to_piece = board.piece_at((to_row, to_col));
-    if to_piece.c == from_piece.c { return (false, arr); }
+    if to_piece.c == from_piece.c { 
+        println!("Cant move to square with ally piece");
+        return (false, arr);
+    }
 
     arr[0] = from_row; arr[1] = from_col; arr[2] = to_row; arr[3] = to_col;
-    println!("Move is {:?}",arr);
-    (true, arr)
+    
+    
+    let valid_moves = get_player_legal_moves(board,board.to_move);
+    match valid_moves.get(&(arr[0],arr[1])){
+        None => {
+            println!("unwrap was none for {:?}",(arr[0],arr[1]));
+            return (false, arr);
+        },
+        Some(moves) => {
+            if moves.iter().any(|pos| pos == &(arr[2],arr[3])){
+                    println!("Move is {:?}",arr);
+                    return (true, arr);
+                }
+        }
+    }
+    println!("There were no valid moves that matched");
+    (false, arr)
 }
 
 pub enum PlayMode{
@@ -147,26 +154,17 @@ pub enum PlayMode{
 pub struct GameManager{
     board: BoardState,
     config: PlayMode,
-    log_file: File,
+    log_file: Option<File>,
     move_count: i32,
 }
 
 impl GameManager{
     pub fn new() -> Self {
-
-        let ts = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap()
-        .as_secs();
-
         GameManager {
             board: BoardState::new(),
             config: PlayMode::Tui,
-            log_file:  OpenOptions::new()
-        .create(true)
-        .append(true)
-        .open(format!("{}.log", ts)).expect("could not open file"),
-        move_count: 0,
+            log_file: None,
+            move_count: 0,
         }
     }
 
@@ -185,17 +183,24 @@ impl GameManager{
         self.config = mode;
     }
 
-    fn log(&mut self,moves: ((i32,i32),(i32,i32))){
-
+    fn log(&mut self, moves: ((i32,i32),(i32,i32))){
+        let file = self.log_file.as_mut().expect("log called but no log file open");
         let piece = &mut self.board.piece_at(moves.0);
         let str = move_to_notation(&mut self.board, piece, moves.1);
-
-        let mut writer = BufWriter::new(&mut self.log_file);
-        let line = format!("{}:{}",char::from_digit(self.move_count as u32, 10).unwrap(),str);
-        writeln!(writer, "{}",line).expect("Could not log move.");
+        let mut writer = BufWriter::new(file);
+        let line = format!("{}:{}", char::from_digit(self.move_count as u32, 10).unwrap(), str);
+        writeln!(writer, "{}", line).expect("Could not log move.");
     }
 
-    pub fn play_game(&mut self,log: bool) -> Result<(),String> {
+    pub fn play_game(&mut self, log: bool) -> Result<(),String> {
+
+        if log && self.log_file.is_none() {
+            let ts = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs();
+            self.log_file = Some(
+                OpenOptions::new().create(true).append(true)
+                    .open(format!("{}.log", ts)).expect("could not open log file")
+            );
+        }
 
         if is_checkmate(&self.board) || is_stalemate(&self.board) {
             panic!("Game is over before starting");
@@ -207,13 +212,13 @@ impl GameManager{
         //loop until game is done
         while state == "none"{
             
-            //print board
-            render_board_cli(&self.board);
-            
+            self.show_valid_moves();
             //get input
             let mut input = String::from("__ __");
             let mut valid = validate_input(&self.board, input).0;
             while !valid{
+                //print board
+                render_board_cli(&self.board);
                 input = input_tui();
                 (valid,moves) = validate_input(&self.board, input);
             }
@@ -228,5 +233,19 @@ impl GameManager{
 
         Ok(())      
     
+}
+
+fn show_valid_moves(&self){
+    let valid_moves = get_player_legal_moves(&self.board, self.board.to_move);
+
+    for (pos, moves) in &valid_moves {
+        let piece = self.board.piece_at(*pos);
+        let (rank, file) = to_algebraic(*pos);
+        let move_strs: Vec<String> = moves.iter().map(|m| {
+            let (mr, mf) = to_algebraic(*m);
+            format!("{}{}", mf, mr)
+        }).collect();
+        println!("{:?} at {}{} : {}", piece.t, file, rank, move_strs.join(", "));
+    }
 }
 }

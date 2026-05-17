@@ -1,4 +1,4 @@
-use crate::board::{BoardState, Piece, PieceColor, PieceType,to_algebraic};
+use crate::board::{BoardState, Piece, PieceColor, PieceType, to_algebraic};
 use std::{collections::{HashMap, HashSet}};
 
 pub fn get_possible_moves(board: &BoardState,piece : &mut Piece) -> Vec<(i32,i32)>{
@@ -500,7 +500,7 @@ fn is_pinned(board: &BoardState,piece: &mut Piece,new_pos: (i32,i32)) -> bool{
         p.pos = new_pos;
     }
 
-    let king_pos = board.playing_pieces
+    let king_pos = board2.playing_pieces
     .iter()
     .find(|p|p.t == PieceType::King && p.c == piece.c)
     .expect("King is not in playing pieces? how bro").pos;
@@ -511,6 +511,23 @@ fn is_pinned(board: &BoardState,piece: &mut Piece,new_pos: (i32,i32)) -> bool{
     .flatten()
     .any(|&pos| pos == king_pos);
     in_check
+}
+
+//king is safe helper fn
+//use to_move to check if oppose color is seeing king
+pub fn is_checked(board: &BoardState, c: PieceColor) -> bool{
+
+    let king_pos = board.playing_pieces
+    .iter()
+    .find(|p| p.c == c && p.t == PieceType::King)
+    .expect(&format!("Player {:?} has no king in piece vector", c))
+    .pos;
+
+    get_player_legal_moves(board, c.oppose())
+    .values()
+    .flatten()
+    .any(|p| *p == king_pos)
+
 }
 
 pub fn get_player_legal_moves(board: &BoardState, c: PieceColor) -> HashMap<(i32,i32), Vec<(i32,i32)>> {

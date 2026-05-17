@@ -87,11 +87,6 @@ impl Piece{
         }
     }
 
-    pub fn oppose(&mut self) -> PieceColor{
-        if self.c == PieceColor::Empty {panic!("Tried to get opposing color of empty square");}
-        let color = if self.c == PieceColor::Black {PieceColor::White} else {PieceColor::Black};
-        color
-    }
 }
 #[derive(Debug,Copy,Clone,PartialEq,Eq,Hash)]
 pub enum PieceColor{
