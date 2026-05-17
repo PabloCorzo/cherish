@@ -17,21 +17,35 @@ pub fn get_possible_moves(board: &BoardState,piece : &mut Piece) -> Vec<(i32,i32
 fn get_possible_pawn_moves(board: &BoardState,piece : &mut Piece) -> Vec<(i32,i32)> {
     
     let mut possible_moves: Vec<(i32,i32)> = Vec::new();
-    let (first_square,jump_spots) = match piece.c {
-        PieceColor::Black => (6,(5,4)),
-        PieceColor::White => (1,(2,3)),
-        PieceColor::Empty => panic!("Pawn has no color"),
+    // let (first_square,jump_spots) = match piece.c {
+    //     PieceColor::Black => (6,(5,4)),
+    //     PieceColor::White => (1,(2,3)),
+    //     PieceColor::Empty => panic!("Pawn has no color"),
+    // };
+    // //has not moved and 2 squares ahead is clear
+    // if first_square == piece.pos.0 && board.piece_at((jump_spots.0,piece.pos.1)).t == PieceType::Empty && board.piece_at((jump_spots.1,piece.pos.1)).t == PieceType::Empty{
+    //     possible_moves.push((jump_spots.1,piece.pos.1));
+    // }
+    // if board.piece_at((jump_spots.0,piece.pos.1)).t == PieceType::Empty{
+    //     possible_moves.push((jump_spots.0,piece.pos.1))
+    // }
+
+    let first_square = match piece.c {
+        PieceColor::Black => 6,
+        PieceColor::White => 1,
+        PieceColor::Empty => panic!("Pawn has no color"),  
     };
-    //has not moved and 2 squares ahead is clear
+
+    let dir = if piece.c == PieceColor::Black {-1} else{1};
+
+    let jump_spots = (piece.pos.0  + (1 * dir),piece.pos.0  + (2 * dir));
     if first_square == piece.pos.0 && board.piece_at((jump_spots.0,piece.pos.1)).t == PieceType::Empty && board.piece_at((jump_spots.1,piece.pos.1)).t == PieceType::Empty{
         possible_moves.push((jump_spots.1,piece.pos.1));
     }
     if board.piece_at((jump_spots.0,piece.pos.1)).t == PieceType::Empty{
         possible_moves.push((jump_spots.0,piece.pos.1))
     }
-
     //en passant
-    let dir = if piece.c == PieceColor::Black {-1} else{1};
     match board.en_passant{
         Some((y,x)) => {
             if (piece.pos.0 + dir,piece.pos.1 + 1) == (y,x) || (piece.pos.0 + dir,piece.pos.1 - 1) == (y,x){possible_moves.push((y,x));}
@@ -335,7 +349,7 @@ fn is_castle(board: &BoardState,pos: (i32,i32),new_pos: (i32,i32)) -> &str{
 
 }
 
-fn is_promotion(board: &BoardState, pos: (i32,i32),new_pos: (i32,i32)) -> bool{
+pub fn is_promotion(board: &BoardState, pos: (i32,i32),new_pos: (i32,i32)) -> bool{
     let p = board.piece_at(pos);
     
     p.t == PieceType::Pawn && ((p.c == PieceColor::Black && new_pos.0 == 0) || (p.c == PieceColor::White && new_pos.0 == 7))

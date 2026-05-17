@@ -67,6 +67,10 @@ impl BoardState{
         }
     }
 
+    pub fn promote_piece(&mut self,pos: (i32,i32),t: PieceType){
+        self.board[pos.0 as usize][pos.1 as usize].t = t;
+    }
+
 }
 #[derive(Debug,Copy,Clone)]
 pub struct Piece{

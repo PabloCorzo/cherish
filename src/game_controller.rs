@@ -91,12 +91,12 @@ fn player_move(board: &mut BoardState, piece: &mut Piece, pos: (i32,i32)) -> &'s
     }
 }
 
-pub fn validate_input(board: &BoardState, input: String) -> (bool, [i32; 4]) {
-    let mut arr = [0i32; 4];
+pub fn validate_input(board: &BoardState, input: String) -> (bool, [i32; 5]) {
+    let mut arr = [0i32; 5];
     let chars: Vec<char> = input.chars().collect();
 
     // expect "e2 e4" format: file rank space file rank
-    if chars.len() != 5 || chars[2] != ' ' { return (false, arr); }
+    if chars.len() < 5 || chars[2] != ' ' { return (false, arr); }
 
     //from and to
     let (f1, r1, f2, r2) = (chars[0], chars[1], chars[3], chars[4]);
@@ -128,6 +128,18 @@ pub fn validate_input(board: &BoardState, input: String) -> (bool, [i32; 4]) {
 
     arr[0] = from_row; arr[1] = from_col; arr[2] = to_row; arr[3] = to_col;
     
+    //if is a promotion extract the piece to be promoted to
+    if is_promotion(&board, (arr[0],arr[1]), (arr[2],arr[3])){
+        if chars.len() < 6 {return (false,arr);}
+        arr[4] = match chars[6]{
+            'q' => 1,
+            'r' => 2,
+            'k' => 3,
+            'b' => 4,
+            _ => 0,
+        };
+        if arr[4] == 0 {return (false, arr)}
+    }
     
     let valid_moves = get_player_legal_moves(board,board.to_move);
     match valid_moves.get(&(arr[0],arr[1])){
@@ -208,7 +220,7 @@ impl GameManager{
 
         let mut state = "none";
 
-        let mut moves: [i32;4] = [0;4];
+        let mut moves: [i32;5] = [0;5];
         //loop until game is done
         while state == "none"{
             
@@ -228,6 +240,21 @@ impl GameManager{
             if log{self.log(turn)}
             
             state = player_move(&mut self.board,&mut piece, turn.1);
+
+            //promotion flag has something
+            if moves[4] != 0{
+                let t = match moves[4]{
+                    0 => panic!("mismatch between type integer mapping"),
+                    1 => PieceType::Queen,
+                    2 => PieceType::Rook,
+                    3 => PieceType::Knight,
+                    4 => PieceType::Bishop,
+                    _ => panic!("mismatch between type integer mapping"),
+                };
+
+                self.board.promote_piece((moves[2],moves[3]), t);
+            }
+
             self.move_count = self.move_count + 1;
         }
 
