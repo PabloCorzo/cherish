@@ -249,7 +249,7 @@ impl GameManager{
             let mut piece = self.board.piece_at(turn.0);
 
             let will_promote = is_promotion(&self.board, turn.0, turn.1);
-            let mut promoted_to: Option<PieceType>;
+            let promoted_to: Option<PieceType>;
             if will_promote{
                 promoted_to = self.get_promoted_piece(input);
             }else{promoted_to = None}
@@ -266,12 +266,8 @@ impl GameManager{
                     4 => PieceType::Bishop,
                     _ => panic!("mismatch between type integer mapping"),
                 };
-                let promoted_to = Some(t);
                 self.board.promote_piece((moves[2],moves[3]), t);
-                if log{self.log(turn,promoted_to);}
             }else {
-                let promoted_to = None;
-                if log{self.log(turn,promoted_to);}
             }
             
             self.move_count = self.move_count + 1;

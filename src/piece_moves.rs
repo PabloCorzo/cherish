@@ -500,7 +500,7 @@ fn is_pinned(board: &BoardState,piece: &mut Piece,new_pos: (i32,i32)) -> bool{
 
     let mut board2 = BoardState::new();
     board2.board = board.board.clone();
-    println!("for piece in {:?} trying {:?}",piece.pos,new_pos);
+    // println!("for piece in {:?} trying {:?}",piece.pos,new_pos);
     board2.board[new_pos.0 as usize][new_pos.1 as usize] = piece.clone();
     board2.board[piece.pos.0 as usize][piece.pos.1 as usize] = Piece {
         t: PieceType::Empty,
