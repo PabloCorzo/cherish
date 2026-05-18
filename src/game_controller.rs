@@ -194,11 +194,22 @@ impl GameManager{
         };
         self.config = mode;
     }
+    
+    fn get_promoted_piece(&self,moves: String) -> Option<PieceType>{
+        let chars: Vec<char> = moves.chars().collect();
+        match chars[6]{
+            'q' => Some(PieceType::Queen),
+            'r' => Some(PieceType::Rook),
+            'n' => Some(PieceType::Knight),
+            'b' => Some(PieceType::Bishop),
+            _ => None,
+        }
+    }
 
-    fn log(&mut self, moves: ((i32,i32),(i32,i32))){
+    fn log(&mut self, moves: ((i32,i32),(i32,i32)),promoted_to: Option<PieceType>){
         let file = self.log_file.as_mut().expect("log called but no log file open");
         let piece = &mut self.board.piece_at(moves.0);
-        let str = move_to_notation(&mut self.board, piece, moves.1);
+        let str = move_to_notation(&mut self.board, piece, moves.1,promoted_to);
         let mut writer = BufWriter::new(file);
         let line = format!("{}:{}", char::from_digit(self.move_count as u32, 10).unwrap(), str);
         writeln!(writer, "{}", line).expect("Could not log move.");
@@ -227,18 +238,22 @@ impl GameManager{
             self.show_valid_moves();
             //get input
             let mut input = String::from("__ __");
-            let mut valid = validate_input(&self.board, input).0;
+            let mut valid = validate_input(&self.board, input.clone()).0;
             while !valid{
                 //print board
                 render_board_cli(&self.board);
                 input = input_tui();
-                (valid,moves) = validate_input(&self.board, input);
+                (valid,moves) = validate_input(&self.board, input.clone());
             }
             let turn = ((moves[0],moves[1]),(moves[2],moves[3]));
             let mut piece = self.board.piece_at(turn.0);
 
-            if log{self.log(turn)}
-            
+            let will_promote = is_promotion(&self.board, turn.0, turn.1);
+            let mut promoted_to: Option<PieceType>;
+            if will_promote{
+                promoted_to = self.get_promoted_piece(input);
+            }else{promoted_to = None}
+            if log{self.log(turn,promoted_to);}
             state = player_move(&mut self.board,&mut piece, turn.1);
 
             //promotion flag has something
@@ -251,10 +266,14 @@ impl GameManager{
                     4 => PieceType::Bishop,
                     _ => panic!("mismatch between type integer mapping"),
                 };
-
+                let promoted_to = Some(t);
                 self.board.promote_piece((moves[2],moves[3]), t);
+                if log{self.log(turn,promoted_to);}
+            }else {
+                let promoted_to = None;
+                if log{self.log(turn,promoted_to);}
             }
-
+            
             self.move_count = self.move_count + 1;
         }
 

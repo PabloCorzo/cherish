@@ -412,9 +412,10 @@ pub fn doubled_assymetrical_horses_attack(board: &mut BoardState,pos: (i32,i32),
 
 
 //given a piece and its new location, trusting its right by other code checking for it
-pub fn move_to_notation(board: &mut BoardState,piece: &mut Piece,new_pos: (i32,i32))-> String{
+pub fn move_to_notation(board: &mut BoardState,piece: &mut Piece,new_pos: (i32,i32),promoted_to: Option<PieceType>)-> String{
     let mut s = String::new();
     let capture = is_capture(board,piece.pos,new_pos);
+    println!("Moved piece was {:?}", piece);
     let initial = initial(piece.t);
     let new_pos_lettered = to_algebraic(new_pos);
     // println!("new pos is {:?}",new_pos);
@@ -431,10 +432,18 @@ pub fn move_to_notation(board: &mut BoardState,piece: &mut Piece,new_pos: (i32,i
         }else{
             s.push_str(&format!("{}{}",new_pos_lettered.1,new_pos_lettered.0));
         }
-        if promotion{s.push_str("=Q");}
+        if promotion{
+            let c = match promoted_to.unwrap_or(PieceType::Empty){
+                PieceType::Queen =>"Q",
+                PieceType::Rook => "R",
+                PieceType::Knight => "N",
+                PieceType::Bishop => "B",
+                _ => "?",
+            };
+            s.push_str(&format!("={}",c));
+        }
         return s;
-    }
-
+}
     //all non pawn moves start with piece initial
     s.push(initial);
     
