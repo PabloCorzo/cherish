@@ -2,9 +2,12 @@
 ✅terminal board print w/o tui
 
 pawn promotion:
-	- change input mode to add a 'e7 e8 Q' where Q is piece to promote to
----DONE
-- change the move its promoted to in notation, rn its queen hardcoded
+	✅- change input mode to add a 'e7 e8 Q' where Q is piece to promote to
+	✅- change the move its promoted to in notation, rn its queen hardcoded
+
+en passant is broken. 
+
+python gui mode 
 
 move to notation is missing check, checkmate and maybe castling? 
 
