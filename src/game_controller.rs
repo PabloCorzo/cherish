@@ -1,4 +1,6 @@
 
+use ratatui::crossterm::queue;
+
 use crate::board::{BoardState, Piece, PieceColor, PieceType,get_row_num,to_algebraic};
 use crate::piece_moves::*;
 use crate::render::*;
@@ -53,6 +55,25 @@ fn player_move(board: &mut BoardState, piece: &mut Piece, pos: (i32,i32)) -> &'s
         false => board.en_passant = None,
     }
 
+    //is it a castle?
+    let is_short_castle = piece.t == PieceType::King && piece.pos.1 - pos.1 == -2;
+    let is_long_castle = piece.t == PieceType::King && piece.pos.1 - pos.1 == 2;
+    println!("Short castle:{} | Long castle:{}",is_short_castle,is_long_castle);
+    let mut new_rook_x: i32 = 0;
+    let mut rook_x: i32 = 0;
+    if is_long_castle{
+        new_rook_x = 3;
+        rook_x = 0;
+    }
+    else if is_short_castle{
+        new_rook_x = 5;
+        rook_x = 7;
+    }
+
+    if is_long_castle || is_short_castle{
+        board.move_piece(&mut board.piece_at((piece.pos.0,rook_x)), (piece.pos.0,new_rook_x));
+    } 
+        
 
     //castling rights revoke
     piece.castle_rights = false;
@@ -218,10 +239,9 @@ impl GameManager{
     pub fn play_game(&mut self, log: bool) -> Result<(),String> {
 
         if log && self.log_file.is_none() {
-            let ts = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs();
             self.log_file = Some(
-                OpenOptions::new().create(true).append(true)
-                    .open(format!("{}.log", ts)).expect("could not open log file")
+                OpenOptions::new().create(true).write(true).truncate(true)
+                    .open("game.log").expect("could not open log file")
             );
         }
 
