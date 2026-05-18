@@ -17,18 +17,6 @@ pub fn get_possible_moves(board: &BoardState,piece : &mut Piece) -> Vec<(i32,i32
 fn get_possible_pawn_moves(board: &BoardState,piece : &mut Piece) -> Vec<(i32,i32)> {
     
     let mut possible_moves: Vec<(i32,i32)> = Vec::new();
-    // let (first_square,jump_spots) = match piece.c {
-    //     PieceColor::Black => (6,(5,4)),
-    //     PieceColor::White => (1,(2,3)),
-    //     PieceColor::Empty => panic!("Pawn has no color"),
-    // };
-    // //has not moved and 2 squares ahead is clear
-    // if first_square == piece.pos.0 && board.piece_at((jump_spots.0,piece.pos.1)).t == PieceType::Empty && board.piece_at((jump_spots.1,piece.pos.1)).t == PieceType::Empty{
-    //     possible_moves.push((jump_spots.1,piece.pos.1));
-    // }
-    // if board.piece_at((jump_spots.0,piece.pos.1)).t == PieceType::Empty{
-    //     possible_moves.push((jump_spots.0,piece.pos.1))
-    // }
 
     let first_square = match piece.c {
         PieceColor::Black => 6,
@@ -38,7 +26,10 @@ fn get_possible_pawn_moves(board: &BoardState,piece : &mut Piece) -> Vec<(i32,i3
 
     let dir = if piece.c == PieceColor::Black {-1} else{1};
 
-    let jump_spots = (piece.pos.0  + (1 * dir),piece.pos.0  + (2 * dir));
+    let mut jump_spots = (piece.pos.0  + (1 * dir),piece.pos.0  + (2 * dir));
+    if jump_spots.0 > 8 || jump_spots.0 < 1{jump_spots.0 = piece.pos.0}
+    if jump_spots.1 > 8 || jump_spots.1 < 1{jump_spots.0 = piece.pos.0}
+    
     if first_square == piece.pos.0 && board.piece_at((jump_spots.0,piece.pos.1)).t == PieceType::Empty && board.piece_at((jump_spots.1,piece.pos.1)).t == PieceType::Empty{
         possible_moves.push((jump_spots.1,piece.pos.1));
     }
@@ -61,6 +52,10 @@ fn get_possible_pawn_moves(board: &BoardState,piece : &mut Piece) -> Vec<(i32,i3
         possible_moves.push((piece.pos.0 + dir,piece.pos.1 - 1));
     }
 
+    if piece.pos.0 == 7{
+        
+        println!("Pawn at {:?} can go to {:?}",piece.pos,possible_moves);
+    }
     possible_moves
 }
 
@@ -496,6 +491,7 @@ fn is_pinned(board: &BoardState,piece: &mut Piece,new_pos: (i32,i32)) -> bool{
 
     let mut board2 = BoardState::new();
     board2.board = board.board.clone();
+    println!("for piece in {:?} trying {:?}",piece.pos,new_pos);
     board2.board[new_pos.0 as usize][new_pos.1 as usize] = piece.clone();
     board2.board[piece.pos.0 as usize][piece.pos.1 as usize] = Piece {
         t: PieceType::Empty,
