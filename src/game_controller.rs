@@ -1,6 +1,3 @@
-
-use ratatui::crossterm::queue;
-
 use crate::board::{BoardState, Piece, PieceColor, PieceType,get_row_num,to_algebraic};
 use crate::piece_moves::*;
 use crate::render::*;
@@ -49,11 +46,16 @@ fn player_move(board: &mut BoardState, piece: &mut Piece, pos: (i32,i32)) -> &'s
     let allows_en_passant = piece.t == PieceType::Pawn && 
     ((piece.pos.0 - pos.0 == 2) || 
     (piece.pos.0 - pos.0 == -2)); 
-
-    match allows_en_passant {
-        true => board.en_passant = Some(pos),
-        false => board.en_passant = None,
-    }
+    
+    let en_passant_dir = match piece.c{
+        PieceColor::Black => 1,
+        PieceColor::White => -1,
+        _ => 0,
+    };
+    //match allows_en_passant {
+    //    true => board.en_passant = Some((pos.0 + en_passant_dir,pos.1)),
+    //    false => board.en_passant = None,
+    //}
 
     //is it a castle?
     let is_short_castle = piece.t == PieceType::King && piece.pos.1 - pos.1 == -2;
@@ -80,17 +82,37 @@ fn player_move(board: &mut BoardState, piece: &mut Piece, pos: (i32,i32)) -> &'s
 
     //is capture? if so, remove piece from vector
     let dest_piece = board.piece_at(pos);
-    match dest_piece.c == piece.c{
+    println!("EN PASSANT: {:?}| POS: {:?}", board.en_passant.unwrap_or((10,10)),pos);
+    if pos == board.en_passant.unwrap_or((10,10)) && piece.t == PieceType::Pawn{
+        //is an en passant capture!
+        let en_passant_dir = match piece.c{
+            PieceColor::Black => 1,
+            PieceColor::White => -1,
+            _ => panic!("Pawn has no color"),
+        };
+
+        board.playing_pieces = board.playing_pieces
+            .iter()
+            .filter(|p| p.pos != (pos.0 + en_passant_dir,pos.1))
+            .cloned()
+            .collect();
+        println!("CLEARING {:?}",(pos.0+en_passant_dir,pos.1));
+        board.board[(pos.0 + en_passant_dir) as usize][pos.1 as usize] = Piece::new(PieceType::Empty, PieceColor::Empty, (pos.0 + en_passant_dir,pos.1));
+    }
+    else{
+        match dest_piece.c == piece.c{
         true => {panic!("Cannot move to place occupied by same color piece.")},
         false => {
+            if dest_piece.c != PieceColor::Empty{
             board.playing_pieces = board.playing_pieces
             .iter()
             .filter(|p| p.pos != pos)
             .cloned()
             .collect();
+            }
         },
     }
-
+    }
     // now that piece might have been removed, you should move the piece!
     //this fn handles:
     //leaving original spot empty -> placing piece in destination and updating piece position
@@ -104,6 +126,10 @@ fn player_move(board: &mut BoardState, piece: &mut Piece, pos: (i32,i32)) -> &'s
     // determine result
     let checkmate = is_checkmate(board);
     let stalemate = is_stalemate(board);
+    match allows_en_passant {
+        true => board.en_passant = Some((pos.0 + en_passant_dir,pos.1)),
+        false => board.en_passant = None,
+    }
     match (checkmate,stalemate) {
         (true,true) => panic!("Cant be stalemated and checkmated at once."),
         (true,false) => "checkmate",
