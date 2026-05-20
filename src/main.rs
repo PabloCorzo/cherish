@@ -18,16 +18,15 @@ fn main() {
         .position(|arg| arg == "-mode")
         .and_then(|pos| args.get(pos + 1))
         .cloned()
-        .unwrap_or_else(||"cli".to_string());
+        .unwrap_or_else(||"std".to_string());
 
-    if play_mode != "tui" && play_mode != "gui" && play_mode != "cli" {play_mode = String::from("cli");}
+    if play_mode != "std" && play_mode != "aim" {play_mode = String::from("std");}
 
     let log: bool = args.iter().any(|arg| arg == "-log");
 
     let mut game = GameManager::new();
-
+    
     game.set_config(&play_mode);
-
     let _ = game.play_game(log);
 
 }

@@ -205,14 +205,8 @@ pub fn validate_input(board: &BoardState, input: String) -> (bool, [i32; 5]) {
     (false, arr)
 }
 
-pub enum PlayMode{
-    Tui,
-    Gui,
-    Cli,
-}
 pub struct GameManager{
     board: BoardState,
-    config: PlayMode,
     log_file: Option<File>,
     move_count: i32,
 }
@@ -221,7 +215,6 @@ impl GameManager{
     pub fn new() -> Self {
         GameManager {
             board: BoardState::new(),
-            config: PlayMode::Tui,
             log_file: None,
             move_count: 0,
         }
@@ -231,16 +224,6 @@ impl GameManager{
     //     self.board = BoardState::new();
     // }
 
-    pub fn set_config(&mut self,play_mode: &str){
-
-        let mode = match play_mode{
-            "tui" => PlayMode::Tui,
-            "gui" => PlayMode::Gui,
-            "cli" => PlayMode::Cli,
-            &_ => panic!("cant set invalid mode")
-        };
-        self.config = mode;
-    }
     
     fn get_promoted_piece(&self,moves: String) -> Option<PieceType>{
         let chars: Vec<char> = moves.chars().collect();
@@ -336,4 +319,11 @@ fn show_valid_moves(&self){
         println!("{:?} at {}{} : {}", piece.t, file, rank, move_strs.join(", "));
     }
 }
+
+pub fn play_aim_game(){
+    
+    let x,y = render_aim_train_cli();
+
+}
+
 }
