@@ -60,7 +60,7 @@ fn player_move(board: &mut BoardState, piece: &mut Piece, pos: (i32,i32)) -> &'s
     //is it a castle?
     let is_short_castle = piece.t == PieceType::King && piece.pos.1 - pos.1 == -2;
     let is_long_castle = piece.t == PieceType::King && piece.pos.1 - pos.1 == 2;
-    println!("Short castle:{} | Long castle:{}",is_short_castle,is_long_castle);
+    //println!("Short castle:{} | Long castle:{}",is_short_castle,is_long_castle);
     let mut new_rook_x: i32 = 0;
     let mut rook_x: i32 = 0;
     if is_long_castle{
@@ -82,7 +82,7 @@ fn player_move(board: &mut BoardState, piece: &mut Piece, pos: (i32,i32)) -> &'s
 
     //is capture? if so, remove piece from vector
     let dest_piece = board.piece_at(pos);
-    println!("EN PASSANT: {:?}| POS: {:?}", board.en_passant.unwrap_or((10,10)),pos);
+    //println!("EN PASSANT: {:?}| POS: {:?}", board.en_passant.unwrap_or((10,10)),pos);
     if pos == board.en_passant.unwrap_or((10,10)) && piece.t == PieceType::Pawn{
         //is an en passant capture!
         let en_passant_dir = match piece.c{
@@ -96,7 +96,7 @@ fn player_move(board: &mut BoardState, piece: &mut Piece, pos: (i32,i32)) -> &'s
             .filter(|p| p.pos != (pos.0 + en_passant_dir,pos.1))
             .cloned()
             .collect();
-        println!("CLEARING {:?}",(pos.0+en_passant_dir,pos.1));
+        //println!("CLEARING {:?}",(pos.0+en_passant_dir,pos.1));
         board.board[(pos.0 + en_passant_dir) as usize][pos.1 as usize] = Piece::new(PieceType::Empty, PieceColor::Empty, (pos.0 + en_passant_dir,pos.1));
     }
     else{
@@ -169,7 +169,7 @@ pub fn validate_input(board: &BoardState, input: String) -> (bool, [i32; 5]) {
     //there is no ally piece on dest
     let to_piece = board.piece_at((to_row, to_col));
     if to_piece.c == from_piece.c { 
-        println!("Cant move to square with ally piece");
+        //println!("Cant move to square with ally piece");
         return (false, arr);
     }
 
@@ -191,7 +191,7 @@ pub fn validate_input(board: &BoardState, input: String) -> (bool, [i32; 5]) {
     let valid_moves = get_player_legal_moves(board,board.to_move);
     match valid_moves.get(&(arr[0],arr[1])){
         None => {
-            println!("unwrap was none for {:?}",(arr[0],arr[1]));
+            //println!("unwrap was none for {:?}",(arr[0],arr[1]));
             return (false, arr);
         },
         Some(moves) => {
@@ -201,7 +201,7 @@ pub fn validate_input(board: &BoardState, input: String) -> (bool, [i32; 5]) {
                 }
         }
     }
-    println!("There were no valid moves that matched");
+    //println!("There were no valid moves that matched");
     (false, arr)
 }
 
@@ -320,10 +320,43 @@ fn show_valid_moves(&self){
     }
 }
 
-pub fn play_aim_game(){
+fn validate_aim_input(input: String) -> (bool,(i32,i32)){
     
-    let x,y = render_aim_train_cli();
+    let mut valid = false;
+    let mut pos = (-1,-1);
+    let valid_len = input.len() == 2;
+    if !valid_len{ return (valid,pos);}
 
+    let valid_file = |c: char| matches!(c.to_ascii_lowercase(), 'a'..='h');
+    let chars: Vec<char> = input.chars().collect();
+    let (f,r) = (chars[0],chars[1]);
+    let valid_x = valid_file(f);
+    if  !r.is_ascii_digit(){return (valid,pos);}
+    let row = r as i32 - '1' as i32;
+    let file = get_row_num(f);
+    let valid_y = row <= 8 && row >= 0;
+    if valid_x && valid_y {
+        valid = true;
+        pos = (row,file);
+    }
+    (valid,pos)
+} 
+
+pub fn play_aim_game(&self) -> Result<(),String>{
+    
+    loop{
+        let (x,y) = render_aim_train_cli();
+        loop{
+        let mut input = String::from("foo");
+        let (mut valid,mut pos) = GameManager::validate_aim_input(input);
+        while !valid{
+            input = input_tui();
+            (valid,pos) = GameManager::validate_aim_input(input);
+            }
+        //println!("POS:{:?} X,Y:{:?}",pos,(x,y));
+        if pos == (7 - y, x){break;}
+    }
+    }
 }
 
 }

@@ -23,10 +23,15 @@ fn main() {
     if play_mode != "std" && play_mode != "aim" {play_mode = String::from("std");}
 
     let log: bool = args.iter().any(|arg| arg == "-log");
-
-    let mut game = GameManager::new();
+    let aim: bool = args.iter().any(|arg| arg == "-aim");
     
-    game.set_config(&play_mode);
-    let _ = game.play_game(log);
+    if aim{play_mode = String::from("aim");}
+    let mut game = GameManager::new();
+    println!("MODE IS {}",play_mode);
+    let result = match play_mode.as_str(){
+        "aim" => game.play_aim_game(),
+       &_ => game.play_game(log),
+    };   
+    //let _ = game.play_game(log);
 
 }
