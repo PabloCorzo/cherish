@@ -342,10 +342,9 @@ fn validate_aim_input(input: String) -> (bool,(i32,i32)){
     (valid,pos)
 } 
 
-pub fn play_aim_game(&self) -> Result<(),String>{
-    
+pub fn play_aim_game(&self,reverse: bool) -> Result<(),String>{
     loop{
-        let (x,y) = render_aim_train_cli();
+        let (target_row,target_col) = render_aim_train_cli(reverse);
         loop{
         let mut input = String::from("foo");
         let (mut valid,mut pos) = GameManager::validate_aim_input(input);
@@ -353,8 +352,7 @@ pub fn play_aim_game(&self) -> Result<(),String>{
             input = input_tui();
             (valid,pos) = GameManager::validate_aim_input(input);
             }
-        //println!("POS:{:?} X,Y:{:?}",pos,(x,y));
-        if pos == (7 - y, x){break;}
+        if pos == (target_row, target_col){break;}
     }
     }
 }

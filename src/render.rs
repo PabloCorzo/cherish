@@ -16,18 +16,22 @@ pub fn render_board_cli(board: &BoardState){
     }
 }
 
-pub fn render_aim_train_cli() -> (i32,i32){
+pub fn render_aim_train_cli(reverse: bool) -> (i32,i32){
 
     let mut rng = rand::rng();
-    let x = rng.random_range(0..8);
-    let y = rng.random_range(0..8);
+    let target_row = rng.random_range(0..8i32);
+    let target_col = rng.random_range(0..8i32);
     let mut buffer = String::new();
-    
+
     buffer.push_str("-----------------------------------------\n");
-    for i in 0..8{
+    for i in 0..8i32{
         buffer.push_str("|");
-        for j in 0..8{
-            let square = match i == y && j == x{
+        for j in 0..8i32{
+            // Map render (i,j) to boardstate (row,col) based on perspective:
+            // Normal:  rank8 at top, a-file at left  → row = 7-i, col = j
+            // Reverse: rank1 at top, h-file at left  → row = i,   col = 7-j
+            let (bs_row, bs_col) = if reverse { (i, 7 - j) } else { (7 - i, j) };
+            let square = match bs_row == target_row && bs_col == target_col{
               true => "\x1b[42m    \x1b[0m", //Green
               false =>  "    ",
             };
@@ -36,5 +40,5 @@ pub fn render_aim_train_cli() -> (i32,i32){
     buffer.push_str("\n-----------------------------------------\n");
     }
     println!("{}",buffer);
-    (x,y)    
+    (target_row, target_col)
 }

@@ -24,12 +24,15 @@ fn main() {
 
     let log: bool = args.iter().any(|arg| arg == "-log");
     let aim: bool = args.iter().any(|arg| arg == "-aim");
+    let aim_r: bool = args.iter().any(|arg| arg == "-aim-r");
     
     if aim{play_mode = String::from("aim");}
+    if aim_r{play_mode = String::from("aim-r");}
     let mut game = GameManager::new();
     println!("MODE IS {}",play_mode);
     let result = match play_mode.as_str(){
-        "aim" => game.play_aim_game(),
+        "aim" => game.play_aim_game(false),
+        "aim-r" => game.play_aim_game(true),
        &_ => game.play_game(log),
     };   
     //let _ = game.play_game(log);
