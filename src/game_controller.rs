@@ -34,7 +34,14 @@ pub fn is_stalemate(board: &BoardState) -> bool{
     //              board repeats 3 times             //
 }
 
-
+fn is_castle(board: &BoardState,piece: &Piece,pos: (i32,i32))-> (bool,bool){
+    
+    
+    let is_short_castle = piece.t == PieceType::King && piece.pos.1 - pos.1 == -2;
+    let is_long_castle = piece.t == PieceType::King && piece.pos.1 - pos.1 == 2;
+    if is_short_castle && is_long_castle{ panic!("Castle check detected both ways castle.");}
+    (is_short_castle,is_long_castle)
+}
 
 //assumes given move is valid. use wisely or it will break boardstate!
 fn player_move(board: &mut BoardState, piece: &mut Piece, pos: (i32,i32)) -> &'static str{
@@ -57,8 +64,7 @@ fn player_move(board: &mut BoardState, piece: &mut Piece, pos: (i32,i32)) -> &'s
     //}
 
     //is it a castle?
-    let is_short_castle = piece.t == PieceType::King && piece.pos.1 - pos.1 == -2;
-    let is_long_castle = piece.t == PieceType::King && piece.pos.1 - pos.1 == 2;
+    let(is_short_castle,is_long_castle) = is_castle(board, piece, pos);
     //println!("Short castle:{} | Long castle:{}",is_short_castle,is_long_castle);
     let mut new_rook_x: i32 = 0;
     let mut rook_x: i32 = 0;
