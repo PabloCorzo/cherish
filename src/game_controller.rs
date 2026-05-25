@@ -5,7 +5,6 @@ use crate::input::*;
 
 use std::fs::{File,OpenOptions};
 use std::io::{BufWriter, Write};
-use std::time::{SystemTime, UNIX_EPOCH};
 
 
 //board will have updated both to_move and board. just check if it can move:

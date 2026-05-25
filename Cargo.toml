@@ -8,3 +8,4 @@ ratatui = "0.29"
 slint = "1"
 image = { version = "0.25", default-features = false, features = ["png"] }
 rand = "0.10.1"
+bitmaps = "3.2.1"
