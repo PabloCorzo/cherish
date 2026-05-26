@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 fn move_bits(bitmap: u64, from: i32, to: i32) -> u64 {
     if to >= from {
@@ -363,4 +363,94 @@ fn queen_possible_moves(board: &Bitboard,piece: i32,c: i32) -> Vec<i32>{
     let bm = bishop_possible_moves(board, piece, c);
 
     [rm,bm].into_iter().flatten().collect()
+}
+
+fn king_possible_moves(board: &Bitboard,piece: i32,c: i32) -> Vec<i32>{
+    let mut moves: Vec<i32> =  Vec::new();
+    let mut squares: [i32;8] = [piece + 7,piece + 8,piece + 9, piece -1,piece + 1, piece -7, piece - 8, piece - 9];
+    
+    //check if bit offsets are right for edge positions
+    let file = piece % 8;
+    let left_free = file;
+    let right_free = 7 - file;
+    let top_free = 7 - (piece / 8);
+    let bot_free = piece / 8;
+    
+    if left_free == 0{
+        squares[0] = 64;
+        squares[3] = 64;
+        squares[5] = 64;
+    }
+
+    if right_free == 0{
+        squares[2] = 64;
+        squares[4] = 64;
+        squares[7] = 64;
+    }
+    if top_free == 0{
+        squares[1] = 64;
+    }
+    if bot_free == 0{
+        squares[6] = 64;
+    }
+
+    for square in squares.into_iter(){
+        if square < 0 || square > 63 {continue;}
+        let team = (board.color_of(square) - c).abs();
+        match team{
+            0 => break,
+            1 => moves.push(square),
+            2 => {
+                moves.push(square);
+                break;
+            },
+            _ => panic!("Team identification via color of subtract is wrong."),
+        }
+
+    }
+    moves
+}
+fn player_possible_moves(board: &Bitboard,c: i32) -> HashMap<i32,Vec<i32>>{
+    
+    let(mut pawns,mut knights,mut bishops,mut rooks,mut queens,mut king) = match c{
+        1  => (board.wp,board.wn,board.wb,board.wr,board.wq,board.wk),
+        -1 => (board.bp,board.bn,board.bb,board.br,board.bq,board.bk),
+        _ => panic!("Color is invalid for player."),
+    };
+
+    let mut all_moves: HashMap<i32,Vec<i32>> = HashMap::new();
+    while pawns != 0{
+        let sq = pawns.trailing_zeros() as i32; //gives LSB
+        //subbing one makes lsb and all prev bits flip,
+        //so setting the board to be the & of that removes lsb
+        pawns &= pawns - 1;
+        all_moves.insert(sq,pawn_possible_moves(board, sq, c));
+    }
+    while knights != 0{
+        let sq = knights.trailing_zeros() as i32; //gives LSB
+        knights &= knights - 1;
+        all_moves.insert(sq,knight_possible_moves(board, sq, c));
+    }
+    while bishops != 0{
+        let sq = bishops.trailing_zeros() as i32; //gives LSB
+        bishops &= bishops - 1;
+        all_moves.insert(sq,bishop_possible_moves(board, sq, c));
+    }
+    while rooks != 0{
+        let sq = rooks.trailing_zeros() as i32; //gives LSB
+        rooks &= rooks - 1;
+        all_moves.insert(sq,rook_possible_moves(board, sq, c));
+    }
+    while queens != 0{
+        let sq = queens.trailing_zeros() as i32; //gives LSB
+        queens &= queens - 1;
+        all_moves.insert(sq,queen_possible_moves(board, sq, c));
+    }
+    //i iterate over 1 king in case i want to add weird game modes later on
+    while king != 0{
+        let sq = king.trailing_zeros() as i32; //gives LSB
+        king &= king - 1;
+        all_moves.insert(sq,king_possible_moves(board, sq, c));
+    }
+    all_moves
 }
