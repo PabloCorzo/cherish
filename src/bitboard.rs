@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 fn move_bits(bitmap: u64, from: i32, to: i32) -> u64 {
     if to >= from {
         bitmap << (to - from)
@@ -112,6 +114,10 @@ impl Bitboard{
         *piece_bitmap = (*piece_bitmap & !(1u64 << pos)) | moved;
     }
     
+    // Do abs of color_of - c, result will be:
+    //     0 for ally
+    //     1 for empty
+    //     2 for enemy
     fn color_of(&self,pos: i32) -> i32{
         let piece = self.piece_at(pos);
         if piece == 0 {return 0;}
@@ -267,18 +273,94 @@ fn knight_possible_moves(board: &Bitboard,piece: i32,c: i32) -> Vec<i32>{
 
 
 fn rook_possible_moves(board: &Bitboard, piece: i32,c: i32) -> Vec<i32>{
-    let mut moves: Vec<i32> = Vec::new();
-    
-    fn move_until_blocked(dir: (i32,i32)) -> Vec<i32>{
+    fn move_until_blocked(board: &Bitboard,dir: (i32,i32),piece: i32,c: i32) -> Vec<i32>{
         let mut squares: Vec<i32> = Vec::new();
         
-        // let mut pos = piece;
-        // while pos <= 63 && pos >= 0{
-        //
-        // }
-
+        let mut pos = piece;
+        let rank = piece / 8;
+        let file = piece % 8;
+        //dir is (y,x), where y and x are -1, 0 or 1. One has to be 0 and the other either -1 or 1
+        pos = pos + 8 * dir.0;
+        pos = pos + dir.1;
+        while pos <= 63 && pos >= 0{
+            if dir.0 != 0 && (pos % 8) != file{break;} 
+            if dir.1 != 0 && (pos / 8) != rank{break;} 
+            let team = (board.color_of(pos) - c).abs();
+            match team{
+                0 => break,
+                1 => squares.push(pos),
+                2 => {
+                    squares.push(pos);
+                    break;
+                },
+                _ => panic!("Team identification via color of subtract is wrong."),
+            }
+            pos = pos + 8 * dir.0;
+            pos = pos + dir.1;
+        }
         squares
     }
+    
 
+    let up_moves = move_until_blocked(board, (1,0), piece, c);
+    let down_moves = move_until_blocked(board, (-1,0), piece, c);
+    let left_moves = move_until_blocked(board, (0,-1), piece, c);
+    let right_moves = move_until_blocked(board, (0,1), piece, c);
+    
+    let moves = [up_moves,down_moves,left_moves,right_moves]
+        .into_iter()
+        .flatten()
+        .collect();
     moves
+}
+
+fn bishop_possible_moves(board: &Bitboard,piece: i32,c: i32) -> Vec<i32>{
+    fn move_until_blocked(board: &Bitboard,dir: (i32,i32),piece: i32,c: i32) -> Vec<i32>{
+        let mut squares: Vec<i32> = Vec::new();
+        
+        let mut pos = piece;
+        let mut rank = piece / 8;
+        let mut file = piece % 8;
+        pos = pos + 8 * dir.0;
+        pos = pos + dir.1;
+        while pos <= 63 && pos >= 0{
+            let y_diff = ((pos % 8) - file).abs();  
+            let x_diff = ((pos / 8) - rank).abs();
+            rank = pos / 8;
+            file = pos % 8;
+            if y_diff > 1 || x_diff > 1{break;} 
+            let team = (board.color_of(pos) - c).abs();
+            match team{
+                0 => break,
+                1 => squares.push(pos),
+                2 => {
+                    squares.push(pos);
+                    break;
+                },
+                _ => panic!("Team identification via color of subtract is wrong."),
+            }
+            pos = pos + 8 * dir.0;
+            pos = pos + dir.1;
+        }
+        squares
+    }
+    
+
+    let up_right = move_until_blocked(board, (1,1), piece, c);
+    let down_right = move_until_blocked(board, (-1,1), piece, c);
+    let up_left = move_until_blocked(board, (1,-1), piece, c);
+    let down_left = move_until_blocked(board, (-1,-1), piece, c);
+    
+    let moves = [up_left,up_right,down_left,down_right]
+        .into_iter()
+        .flatten()
+        .collect();
+    moves
+}
+
+fn queen_possible_moves(board: &Bitboard,piece: i32,c: i32) -> Vec<i32>{
+    let rm = rook_possible_moves(board, piece, c);
+    let bm = bishop_possible_moves(board, piece, c);
+
+    [rm,bm].into_iter().flatten().collect()
 }
