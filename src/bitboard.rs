@@ -195,8 +195,73 @@ fn pawn_possible_moves(board: &Bitboard,piece: i32,c: i32) -> Vec<i32>{
 fn knight_possible_moves(board: &Bitboard,piece: i32,c: i32) -> Vec<i32>{
     let mut moves: Vec<i32> = Vec::new();
         
-    let jumps: [i32;8] = [piece + 6,piece + 15,piece + 10,piece + 17,piece - 10, piece - 17, piece - 6,piece - 15];
+    let jumps: [i32;8] = [piece + 6,piece - 10,piece + 15,piece - 17,piece + 10, piece - 6, piece + 17,piece - 15];
+    let file = piece % 8;
+    let left_free = file;
+    let right_free = 7 - file;
+    let top_free = 7 - (piece / 8);
+    let bot_free = piece / 8;
 
+    //2 left, 1 up/down
+    if left_free > 1 {
+        if top_free > 0{
+            match board.color_of(jumps[0]) == c{
+            true => moves.push(jumps[0]),
+            false => {},
+            }
+        }
+        if bot_free > 0{
+            match board.color_of(jumps[1]) == c{
+            true => moves.push(jumps[1]),
+            false => {},
+            }
+        }
+    }
+    //1 left, 2 up/down
+    if left_free > 0{
+        if top_free > 1{
+            match board.color_of(jumps[2]) == c{
+            true => moves.push(jumps[2]),
+            false => {},
+            }
+        }
+        if bot_free > 1{
+            match board.color_of(jumps[3]) == c{
+            true => moves.push(jumps[3]),
+            false => {},
+            }
+        }
+    }
+    //2 right, 1 up/down
+    if right_free > 1{
+        if top_free > 0{
+            match board.color_of(jumps[4]) == c{
+            true => moves.push(jumps[4]),
+            false => {},
+            }
+        }
+        if bot_free > 0{
+            match board.color_of(jumps[5]) == c{
+            true => moves.push(jumps[5]),
+            false => {},
+            }
+        }
+    }
+    //1 right, 2 up/down
+    if right_free > 0{
+        if top_free > 1{
+            match board.color_of(jumps[6]) == c{
+            true => moves.push(jumps[6]),
+            false => {},
+            }
+        }
+        if bot_free > 1{
+            match board.color_of(jumps[7]) == c{
+            true => moves.push(jumps[7]),
+            false => {},
+            }
+        }
+    }
     moves
 }
 
