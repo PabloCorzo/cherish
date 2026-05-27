@@ -25,10 +25,17 @@ pub struct Bitboard{
     pub bk : u64,    
     pub to_move: i32,
     pub en_passant: Option<i32>,
-    
+    pub castle_rights: Vec<i32>, 
 }
 impl Bitboard{
     pub fn new() -> Self{
+        
+        let mut castle_rights: Vec<i32> = Vec::new();
+        
+        castle_rights.push(0);
+        castle_rights.push(7);
+        castle_rights.push(56);
+        castle_rights.push(63);
 
         Bitboard{
             
@@ -53,6 +60,7 @@ impl Bitboard{
            
             en_passant: None,
             to_move:1,
+            castle_rights,
         }    
      
     }     

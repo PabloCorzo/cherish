@@ -288,6 +288,10 @@ fn king_possible_moves(board: &Bitboard,piece: i32,c: i32) -> Vec<i32>{
         }
 
     }
+
+    //look for rooks to the left and right whose castle rights are up
+
+
     moves
 }
 fn player_possible_moves(board: &Bitboard,c: i32,include_king: bool) -> HashMap<i32,Vec<i32>>{
