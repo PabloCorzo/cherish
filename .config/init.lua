@@ -170,6 +170,15 @@ require("lazy").setup({
     end,
   },
 
+  -- Comment/uncomment lines (<leader>/ or gcc)
+  {
+    "numToStr/Comment.nvim",
+    config = function()
+      require("Comment").setup()
+      vim.keymap.set("n", "<leader>/", "gcc", { remap = true, desc = "Toggle comment" })
+      vim.keymap.set("v", "<leader>/", "gc",  { remap = true, desc = "Toggle comment" })
+    end,
+  },
 
   -- ── Themes: brown/warm ───────────────────────────────────────
   { "ellisonleao/gruvbox.nvim",

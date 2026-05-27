@@ -1,9 +1,9 @@
 use crate::bitboard::Bitboard;
 use std::collections::{HashMap};
 
-fn pawn_possible_moves(board: &Bitboard,piece: i32,c: i32) -> Vec<i32>{
+fn pawn_possible_moves(board: &Bitboard,piece: i32) -> Vec<i32>{
     let mut moves: Vec<i32> = Vec::new();
-
+    let c = board.to_move;
     let (one_step,two_step): (i32,i32) = match c{
         1  => (piece + 8,piece + 16),
         -1 => (piece - 8,piece - 16),
@@ -78,9 +78,9 @@ fn pawn_possible_moves(board: &Bitboard,piece: i32,c: i32) -> Vec<i32>{
 //   .    .   -10   .    .    .   -6    .    <- rank 3
 //   .    .    .   -17   .   -15   .    .    <- rank 2
 
-fn knight_possible_moves(board: &Bitboard,piece: i32,c: i32) -> Vec<i32>{
+fn knight_possible_moves(board: &Bitboard,piece: i32) -> Vec<i32>{
     let mut moves: Vec<i32> = Vec::new();
-        
+    let c = board.to_move;
     let jumps: [i32;8] = [piece + 6,piece - 10,piece + 15,piece - 17,piece + 10, piece - 6, piece + 17,piece - 15];
     let file = piece % 8;
     let left_free = file;
@@ -123,7 +123,7 @@ fn knight_possible_moves(board: &Bitboard,piece: i32,c: i32) -> Vec<i32>{
         if top_free > 0{
             match board.color_of(jumps[4]) == c{
             true => moves.push(jumps[4]),
-            false => {},
+            false => {},    
             }
         }
         if bot_free > 0{
@@ -149,13 +149,13 @@ fn knight_possible_moves(board: &Bitboard,piece: i32,c: i32) -> Vec<i32>{
         }
     }
     moves
-}
-
-
-fn rook_possible_moves(board: &Bitboard, piece: i32,c: i32) -> Vec<i32>{
+} 
+ 
+  
+fn rook_possible_moves(board: &Bitboard, piece: i32) -> Vec<i32>{
+    let c = board.to_move;
     fn move_until_blocked(board: &Bitboard,dir: (i32,i32),piece: i32,c: i32) -> Vec<i32>{
         let mut squares: Vec<i32> = Vec::new();
-        
         let mut pos = piece;
         let rank = piece / 8;
         let file = piece % 8;
@@ -194,7 +194,8 @@ fn rook_possible_moves(board: &Bitboard, piece: i32,c: i32) -> Vec<i32>{
     moves
 }
 
-fn bishop_possible_moves(board: &Bitboard,piece: i32,c: i32) -> Vec<i32>{
+fn bishop_possible_moves(board: &Bitboard,piece: i32) -> Vec<i32>{
+    let c = board.to_move;
     fn move_until_blocked(board: &Bitboard,dir: (i32,i32),piece: i32,c: i32) -> Vec<i32>{
         let mut squares: Vec<i32> = Vec::new();
         
@@ -218,34 +219,35 @@ fn bishop_possible_moves(board: &Bitboard,piece: i32,c: i32) -> Vec<i32>{
                     break;
                 },
                 _ => panic!("Team identification via color of subtract is wrong."),
-            }
+            } 
             pos = pos + 8 * dir.0;
             pos = pos + dir.1;
-        }
+        } 
         squares
-    }
-    
-
+    } 
+     
+ 
     let up_right = move_until_blocked(board, (1,1), piece, c);
     let down_right = move_until_blocked(board, (-1,1), piece, c);
     let up_left = move_until_blocked(board, (1,-1), piece, c);
     let down_left = move_until_blocked(board, (-1,-1), piece, c);
-    
+     
     let moves = [up_left,up_right,down_left,down_right]
         .into_iter()
         .flatten()
         .collect();
-    moves
-}
-
-fn queen_possible_moves(board: &Bitboard,piece: i32,c: i32) -> Vec<i32>{
-    let rm = rook_possible_moves(board, piece, c);
-    let bm = bishop_possible_moves(board, piece, c);
-
+    moves 
+} 
+ 
+fn queen_possible_moves(board: &Bitboard,piece: i32) -> Vec<i32>{
+    let c = board.to_move;
+    let bm = bishop_possible_moves(board, piece);
+    let rm = rook_possible_moves(board, piece);
     [rm,bm].into_iter().flatten().collect()
 }
 
-fn king_possible_moves(board: &Bitboard,piece: i32,c: i32) -> Vec<i32>{
+fn king_possible_moves(board: &Bitboard,piece: i32) -> Vec<i32>{
+    let c = board.to_move;
     let mut moves: Vec<i32> =  Vec::new();
     let mut squares: [i32;8] = [piece + 7,piece + 8,piece + 9, piece -1,piece + 1, piece -7, piece - 8, piece - 9];
     
@@ -290,52 +292,102 @@ fn king_possible_moves(board: &Bitboard,piece: i32,c: i32) -> Vec<i32>{
     }
 
     //look for rooks to the left and right whose castle rights are up
+    //horizontal check by iterating rooks and checking for rank?
+    let mut rooks = match c {
+        -1 => board.br,
+        1 => board.wr,
+        _ => panic!("Invalid color."),        
+    };
+    let mut possible_rooks:Vec<i32> = Vec::new();
+    let king_rank = piece / 8;
+    let mut rank;
+    while rooks != 0{
+        let sq = rooks.trailing_zeros() as i32; //gives LSB
+        rooks &= rooks - 1;
+        rank = sq / 8;
+        if rank == king_rank{possible_rooks.push(sq);}
 
+    }
+
+    //for each i32 rook pos, iterate from king to rook and check all squares are empty
+    // Castling therefore requires horizontal alignment and no moves beforehand for rook and king
+    // meaning if you have 3 rooks at the start, one of which if next to the king, you can castle w it
+    for rook in possible_rooks.into_iter(){
+        let from = std::cmp::min(piece,rook) + 1;   
+        let to = std::cmp::max(piece,rook);   
+        let mut pieces: Vec<i32> = Vec::new();
+        for square in from..to{
+        pieces.push((board.color_of(square) - c).abs());
+        }
+        if pieces.contains(&0) || pieces.contains(&2){
+            moves.push(rook);
+        }
+    }
 
     moves
 }
-fn player_possible_moves(board: &Bitboard,c: i32,include_king: bool) -> HashMap<i32,Vec<i32>>{
-    
+fn player_possible_moves(board: &Bitboard,include_king: bool) -> HashMap<i32,Vec<i32>>{
+    let c = board.to_move; 
     let(mut pawns,mut knights,mut bishops,mut rooks,mut queens,mut king) = match c{
         1  => (board.wp,board.wn,board.wb,board.wr,board.wq,board.wk),
         -1 => (board.bp,board.bn,board.bb,board.br,board.bq,board.bk),
         _ => panic!("Color is invalid for player."),
-    };
-
+    }; 
+ 
     let mut all_moves: HashMap<i32,Vec<i32>> = HashMap::new();
-    while pawns != 0{
+    while pawns != 0{ 
         let sq = pawns.trailing_zeros() as i32; //gives LSB
         //subbing one makes lsb and all prev bits flip,
         //so setting the board to be the & of that removes lsb
-        pawns &= pawns - 1;
-        all_moves.insert(sq,pawn_possible_moves(board, sq, c));
-    }
-    while knights != 0{
+        pawns &= pawns - 1; 
+        all_moves.insert(sq,pawn_possible_moves(board, sq));
+    } 
+    while knights != 0{ 
         let sq = knights.trailing_zeros() as i32; //gives LSB
         knights &= knights - 1;
-        all_moves.insert(sq,knight_possible_moves(board, sq, c));
-    }
-    while bishops != 0{
+        all_moves.insert(sq,knight_possible_moves(board, sq));
+    } 
+    while bishops != 0{ 
         let sq = bishops.trailing_zeros() as i32; //gives LSB
         bishops &= bishops - 1;
-        all_moves.insert(sq,bishop_possible_moves(board, sq, c));
-    }
-    while rooks != 0{
+        all_moves.insert(sq,bishop_possible_moves(board, sq));
+    } 
+    while rooks != 0{ 
         let sq = rooks.trailing_zeros() as i32; //gives LSB
-        rooks &= rooks - 1;
-        all_moves.insert(sq,rook_possible_moves(board, sq, c));
-    }
+        rooks &= rooks - 1;  
+        all_moves.insert(sq,rook_possible_moves(board, sq));
+    } 
     while queens != 0{
         let sq = queens.trailing_zeros() as i32; //gives LSB
         queens &= queens - 1;
-        all_moves.insert(sq,queen_possible_moves(board, sq, c));
+        all_moves.insert(sq,queen_possible_moves(board, sq));
     }
     //i iterate over 1 king in case i want to add weird game modes later on
     if !include_king{return all_moves;}
     while king != 0{
         let sq = king.trailing_zeros() as i32; //gives LSB
         king &= king - 1;
-        all_moves.insert(sq,king_possible_moves(board, sq, c));
+        all_moves.insert(sq,king_possible_moves(board, sq));
     }
     all_moves
+}
+
+fn is_legal(board: &Bitboard,from: i32,to: i32) -> bool{
+    let mut n_board = board.clone();
+    n_board.move_piece(from, to);
+    
+    //will grab first king it sees from corresponding array
+    let king = match board.to_move{
+        1 => board.wk,
+        -1 => board.bk,
+        _ => panic!("Invalid color"),
+    };
+    let king_pos = king.trailing_zeros() as i32;
+    let search_recursivity = false;
+    let moves = player_possible_moves(&n_board, search_recursivity);
+    moves
+        .into_iter()
+        .any(|(_k,v)| {
+            v.contains(&king_pos) 
+        })
 }

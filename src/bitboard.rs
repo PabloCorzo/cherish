@@ -6,6 +6,7 @@ fn move_bits(bitmap: u64, from: i32, to: i32) -> u64 {
     }
 }
 
+#[derive(Clone)]
 pub struct Bitboard{
     
     // White pieces
@@ -132,5 +133,6 @@ impl Bitboard{
             false => return -1,
         }
     }
+
 }
 
