@@ -26,7 +26,7 @@ struct Bitboard{
     bq : u64,    
     bk : u64,    
     to_move: i32,
-    en_passant: Option<u32>,
+    en_passant: Option<i32>,
     
 }
 impl Bitboard{
@@ -92,17 +92,17 @@ impl Bitboard{
         if piece == 0 {panic!("Tried to move none piece at {}",pos);}
         
         let piece_bitmap = match piece{
-            1  => &mut self.wp,
+            1 => &mut self.wp,
             -1 => &mut self.bp,
-            2  => &mut self.wn,
+            2 => &mut self.wn,
             -2 => &mut self.bn,
-            3  => &mut self.wb,
+            3 => &mut self.wb,
             -3 => &mut self.bb,
-            4  => &mut self.wr,
+            4 => &mut self.wr,
             -4 => &mut self.br,
-            5  => &mut self.wq,
+            5 => &mut self.wq,
             -5 => &mut self.bq,
-            6  => &mut self.wk,
+            6 => &mut self.wk,
             -6 => &mut self.bk,
             _ => panic!("When moving piece recieved and invalid case"),
         };
@@ -138,7 +138,7 @@ fn pawn_possible_moves(board: &Bitboard,piece: i32,c: i32) -> Vec<i32>{
     };
     let (dl,dr): (i32,i32) = match c {
         1  => (piece + 7,piece + 9),
-        -1 => (piece - 7,piece - 9),
+        -1 => (piece - 9,piece - 7),
         _ => panic!("Pawn has invalid color"),
     };
 
@@ -146,7 +146,7 @@ fn pawn_possible_moves(board: &Bitboard,piece: i32,c: i32) -> Vec<i32>{
     //     0 for ally
     //     1 for empty
     //     2 for enemy
-    //TODO: EN PASSANT CHECK
+
     let can_jump: bool = match c{
         1  => piece >= 8 && piece <= 15,
         -1 => piece >= 48 && piece <= 55,
@@ -184,6 +184,15 @@ fn pawn_possible_moves(board: &Bitboard,piece: i32,c: i32) -> Vec<i32>{
         2 => if file < 7{moves.push(dr)},
         _ => panic!("Team identification via color of subtract is wrong."),
     }
+
+    //en passant check
+    let en_passant = match board.en_passant{
+        Some(i) => i,
+        None => 64,
+    };
+    
+    if en_passant == dr {moves.push(dr);}
+    if en_passant == dl {moves.push(dl);}
 
     moves
 }
