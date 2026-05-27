@@ -69,8 +69,6 @@ fn pawn_possible_moves(board: &Bitboard,piece: i32,c: i32) -> Vec<i32>{
 
     moves
 }
-
-
 // Knight move offsets, N = piece location (e.g. e4):
 //
 //   a    b    c    d    e    f    g    h
@@ -292,7 +290,7 @@ fn king_possible_moves(board: &Bitboard,piece: i32,c: i32) -> Vec<i32>{
     }
     moves
 }
-fn player_possible_moves(board: &Bitboard,c: i32) -> HashMap<i32,Vec<i32>>{
+fn player_possible_moves(board: &Bitboard,c: i32,include_king: bool) -> HashMap<i32,Vec<i32>>{
     
     let(mut pawns,mut knights,mut bishops,mut rooks,mut queens,mut king) = match c{
         1  => (board.wp,board.wn,board.wb,board.wr,board.wq,board.wk),
@@ -329,6 +327,7 @@ fn player_possible_moves(board: &Bitboard,c: i32) -> HashMap<i32,Vec<i32>>{
         all_moves.insert(sq,queen_possible_moves(board, sq, c));
     }
     //i iterate over 1 king in case i want to add weird game modes later on
+    if !include_king{return all_moves;}
     while king != 0{
         let sq = king.trailing_zeros() as i32; //gives LSB
         king &= king - 1;
