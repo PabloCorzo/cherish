@@ -1,5 +1,5 @@
 use crate::bitboard::Bitboard;
-use std::collections::{HashMap};
+use std::{collections::HashMap, hash::Hash};
 
 fn pawn_possible_moves(board: &Bitboard,piece: i32) -> Vec<i32>{
     let mut moves: Vec<i32> = Vec::new();
@@ -390,4 +390,38 @@ fn is_legal(board: &Bitboard,from: i32,to: i32) -> bool{
         .any(|(_k,v)| {
             v.contains(&king_pos) 
         })
+}
+
+pub fn player_legal_moves(board: &Bitboard) -> HashMap<i32,Vec<i32>>{
+    
+    //get all possible moves
+    let include_king = true;
+    let moves = player_possible_moves(board, include_king);
+    
+    let mut legals: HashMap<i32,Vec<i32>> = HashMap::new();
+    
+    //for each piece and its moves:
+    for (from,tos) in moves.into_iter(){
+        
+        //filter the moves to only legal ones
+        let piece_legals: Vec<i32> = tos
+            .into_iter()
+            .filter(|to| is_legal(board, from, *to))
+            .collect();
+        
+        //insert into new map the legal ones
+        legals.insert(from,piece_legals);
+    }
+    legals
+
+}
+
+//can check for each team by changing the turn for lookup then swapping it back to original state
+pub fn has_moves(board: &mut Bitboard,c: i32) -> bool{
+    if c.abs() != 1{panic!("Invalid color");}
+    let prev_c = board.to_move;
+    board.to_move = c;
+    let moves = player_legal_moves(board);
+    board.to_move = prev_c;
+    !moves.is_empty()
 }
