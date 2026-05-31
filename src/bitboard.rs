@@ -26,7 +26,8 @@ pub struct Bitboard{
     pub bk : u64,    
     pub to_move: i32,
     pub en_passant: Option<i32>,
-    pub castle_rights: Vec<i32>, 
+    pub castle_rights: Vec<i32>,
+    pub counter: i32,
 }
 impl Bitboard{
     pub fn new() -> Self{
@@ -62,6 +63,7 @@ impl Bitboard{
             en_passant: None,
             to_move:1,
             castle_rights,
+            counter: 0,
         }    
      
     }     
@@ -96,8 +98,12 @@ impl Bitboard{
     pub fn move_piece(&mut self,pos: i32, new_pos: i32){
 
         let piece = self.piece_at(pos as i32);
-        if piece == 0 {panic!("Tried to move none piece at {}",pos);}
+        if piece == 0 {panic!("Tried to move none piece at {}",pos);} 
         
+        let team = (self.color_of(new_pos) - self.to_move).abs();
+        if team == 2 {self.counter = 0;}
+        else {self.counter += 1}
+
         let piece_bitmap = match piece{
             1 => &mut self.wp,
             -1 => &mut self.bp,
@@ -114,11 +120,11 @@ impl Bitboard{
             _ => panic!("When moving piece recieved and invalid case"),
         };
 
-        // UNLESS SPECIFIED, NUMBERS WILL BE U32, SO DECLARE AS U64 IF ITS BITMAP
-        let piece_bit = *piece_bitmap & (1u64 << pos);
+        let piece_bit = *piece_bitmap & (1 << pos);
         let moved = move_bits(piece_bit,pos,new_pos);
-
-        *piece_bitmap = (*piece_bitmap & !(1u64 << pos)) | moved;
+    
+        *piece_bitmap = (*piece_bitmap & !(1 << pos)) | moved;
+    
     }
     
     // Do abs of color_of - c, result will be:
@@ -135,4 +141,16 @@ impl Bitboard{
     }
 
 }
-
+pub fn letter_to_x(letter: char) -> i32{
+    match letter{
+        'a' => 0,
+        'b' => 1,
+        'c' => 2,
+        'd' => 3,
+        'e' => 4,
+        'f' => 5,
+        'g' => 6,
+        'h' => 7,
+        _ => panic!("Invalid file"),
+    }
+}

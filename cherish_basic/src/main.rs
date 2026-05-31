@@ -1,4 +1,3 @@
-mod bitboard;
 mod board;
 mod piece_moves;
 mod tests;

@@ -1,5 +1,5 @@
 use crate::bitboard::Bitboard;
-use std::{collections::HashMap, hash::Hash};
+use std::{collections::HashMap};
 
 fn pawn_possible_moves(board: &Bitboard,piece: i32) -> Vec<i32>{
     let mut moves: Vec<i32> = Vec::new();
@@ -372,7 +372,7 @@ fn player_possible_moves(board: &Bitboard,include_king: bool) -> HashMap<i32,Vec
     all_moves
 }
 
-fn is_legal(board: &Bitboard,from: i32,to: i32) -> bool{
+pub fn is_legal(board: &Bitboard,from: i32,to: i32) -> bool{
     let mut n_board = board.clone();
     n_board.move_piece(from, to);
     
@@ -424,4 +424,101 @@ pub fn has_moves(board: &mut Bitboard,c: i32) -> bool{
     let moves = player_legal_moves(board);
     board.to_move = prev_c;
     !moves.is_empty()
+}
+
+pub fn is_promotion(board: &Bitboard, fromto: (i32,i32)) -> bool{
+    if board.piece_at(fromto.0).abs() != 1{ return false; } 
+    let (last_rank,second_last_rank) = match board.to_move{
+        1 => (7,6),
+        -1 => (0,1),
+        _ => panic!("invalid color"),
+    };
+   fromto.0 / 8 == second_last_rank && fromto.1 == last_rank 
+ }
+
+pub fn is_checked(_board: &Bitboard, c: i32) -> bool{
+    let mut board = _board.clone();
+    board.to_move = -c;
+    //will grab first king it sees from corresponding array
+    let king = match c{
+        1 => board.wk,
+        -1 => board.bk,
+        _ => panic!("Invalid color"),
+    };
+    let king_pos = king.trailing_zeros() as i32;
+    player_legal_moves(&board)
+        .into_iter()
+        .any(|(k,v)| {v.contains(&king_pos)})
+}
+
+pub fn is_capture(board: &Bitboard,fromto: (i32,i32)) -> bool{
+        
+    //0 ally, 1 emtpy, 2 enemy
+    
+    let team = (board.color_of(fromto.1) - board.to_move).abs();
+    match team{
+        0 => return true,
+        1 => return false,
+        2 => return true,
+        _ => panic!("Team identification via color of subtract is wrong."),
+    }
+
+}
+
+fn check_insufficiente_material(board: &Bitboard) -> bool {
+    
+    if board.wp > 0 {return false;}
+    if board.bp > 0 {return false;}
+    if board.wr > 0 {return false;}
+    if board.br > 0 {return false;}
+    if board.wq > 0 {return false;}
+    if board.bq > 0 {return false;}
+
+    if board.wn > 0 && board.wb > 0 {return false;}
+    if board.bn > 0 && board.bb > 0 {return false;}
+    
+    let max_white = std::cmp::max(board.wn.count_ones(),board.wb.count_ones());
+    let max_black = std::cmp::max(board.bn.count_ones(),board.bb.count_ones());
+
+    if max_white > 0 && max_black > 0 {return false;}
+    if max_white > 1 || max_black > 1 {return false;}
+
+    true
+}
+
+
+pub fn board_state(board: &Bitboard) -> i32{
+    
+    let mut mate = false;
+    let can_move = !player_legal_moves(board).is_empty();
+    let is_checked = is_checked(board, board.to_move);
+    if is_checked && !can_move { mate = true; }
+
+    if mate{
+        match board.to_move{
+            1 => return -1,
+            -1 => return 1,
+            _ => panic!("Invalid color"),
+            
+        }
+    }
+
+    //for stalemate:
+    //no legal moves
+    if !is_checked && can_move{ return 2; }
+    
+    //50 moves (50 white 50 black) without captures
+    if board.counter >= 100 { return 2; }
+    
+    //insufficient material:
+    // King v King
+    // King & Bishop v King
+    // King & Knight v King
+    let insufficient_material = check_insufficiente_material(board);
+    if insufficient_material { return 2; } 
+
+    //3 board repetitions
+    
+
+    0
 }
