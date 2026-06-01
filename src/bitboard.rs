@@ -38,7 +38,8 @@ impl Bitboard{
         castle_rights.push(7);
         castle_rights.push(56);
         castle_rights.push(63);
-
+        castle_rights.push(4);
+        castle_rights.push(60);
         Bitboard{
             
             //Think of sets of 4b. 
@@ -95,37 +96,57 @@ impl Bitboard{
     //Assumes move is valid
     //will panic if pos is empty
     //will replace whatever is on the other end, does not matter if its ally
-    pub fn move_piece(&mut self,pos: i32, new_pos: i32){
-
-        let piece = self.piece_at(pos as i32);
-        if piece == 0 {panic!("Tried to move none piece at {}",pos);} 
+   pub fn move_piece(&mut self, pos: i32, new_pos: i32) {
+    let piece = self.piece_at(pos as i32);
+    if piece == 0 { panic!("Tried to move none piece at {}", pos); }
+    
+    let castle = piece.abs() == 6 && self.piece_at(new_pos).abs() == 4;
         
-        let team = (self.color_of(new_pos) - self.to_move).abs();
-        if team == 2 {self.counter = 0;}
-        else {self.counter += 1}
+    if piece.abs() == 6 || piece.abs() == 4 {self.castle_rights.retain(|&p| { p != pos} );}
 
-        let piece_bitmap = match piece{
-            1 => &mut self.wp,
-            -1 => &mut self.bp,
-            2 => &mut self.wn,
-            -2 => &mut self.bn,
-            3 => &mut self.wb,
-            -3 => &mut self.bb,
-            4 => &mut self.wr,
-            -4 => &mut self.br,
-            5 => &mut self.wq,
-            -5 => &mut self.bq,
-            6 => &mut self.wk,
-            -6 => &mut self.bk,
-            _ => panic!("When moving piece recieved and invalid case"),
+
+    let team = (self.color_of(new_pos) - self.to_move).abs();
+    if team == 2 { self.counter = 0; }
+    else { self.counter += 1 }
+
+    if castle {
+        let goes_right = new_pos > pos;
+        let king_dest = if goes_right { pos + 2 } else { pos - 2 };
+        let rook_dest = if goes_right { pos + 1 } else { pos - 1 };
+
+        self.move_piece(new_pos, rook_dest);
+
+        let king_bitmap = match self.to_move {
+            1  => &mut self.wk,
+            -1 => &mut self.bk,
+            _ => panic!("Invalid color"),
         };
-
-        let piece_bit = *piece_bitmap & (1 << pos);
-        let moved = move_bits(piece_bit,pos,new_pos);
-    
-        *piece_bitmap = (*piece_bitmap & !(1u64 << pos as u32)) | moved;
-    
+        let bit = *king_bitmap & (1u64 << pos as u32);
+        let moved = move_bits(bit, pos, king_dest);
+        *king_bitmap = (*king_bitmap & !(1u64 << pos as u32)) | moved;
+        return;
     }
+
+    let piece_bitmap = match piece {
+        1  => &mut self.wp,
+        -1 => &mut self.bp,
+        2  => &mut self.wn,
+        -2 => &mut self.bn,
+        3  => &mut self.wb,
+        -3 => &mut self.bb,
+        4  => &mut self.wr,
+        -4 => &mut self.br,
+        5  => &mut self.wq,
+        -5 => &mut self.bq,
+        6  => &mut self.wk,
+        -6 => &mut self.bk,
+        _ => panic!("When moving piece received an invalid case"),
+    };
+
+    let piece_bit = *piece_bitmap & (1u64 << pos as u32);
+    let moved = move_bits(piece_bit, pos, new_pos);
+    *piece_bitmap = (*piece_bitmap & !(1u64 << pos as u32)) | moved;
+   }
     
     // Do abs of color_of - c, result will be:
     //     0 for ally

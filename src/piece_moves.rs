@@ -296,7 +296,7 @@ fn king_possible_moves(board: &Bitboard,piece: i32) -> Vec<i32>{
         if square < 0 || square > 63 {continue;}
         let team = (board.color_of(square) - c).abs();
         match team{
-            0 => break,
+            0 => continue,
             1 => moves.push(square),
             2 => {
                 moves.push(square);
@@ -304,7 +304,6 @@ fn king_possible_moves(board: &Bitboard,piece: i32) -> Vec<i32>{
             },
             _ => panic!("Team identification via color of subtract is wrong."),
         }
-
     }
 
     //look for rooks to the left and right whose castle rights are up
@@ -317,11 +316,13 @@ fn king_possible_moves(board: &Bitboard,piece: i32) -> Vec<i32>{
     let mut possible_rooks:Vec<i32> = Vec::new();
     let king_rank = piece / 8;
     let mut rank;
+
+    if !board.castle_rights.contains(&piece) {return moves;} 
     while rooks != 0{
         let sq = rooks.trailing_zeros() as i32; //gives LSB
         rooks &= rooks - 1;
         rank = sq / 8;
-        if rank == king_rank{possible_rooks.push(sq);}
+        if rank == king_rank && board.castle_rights.contains(&sq){possible_rooks.push(sq);}
 
     }
 

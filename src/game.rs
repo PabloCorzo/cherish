@@ -130,7 +130,10 @@ pub fn play_game(&mut self) {
         let capture = is_capture(&self.board, (from, to));
 
 
-        let legal = is_legal(&self.board, from, to);
+
+        let legal = player_legal_moves(&self.board)
+            .into_iter()
+            .any(|(k,v)| { k == from && v.contains(&to)});
         if !legal { continue; }
 
 
