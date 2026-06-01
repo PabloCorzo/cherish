@@ -123,7 +123,7 @@ impl Bitboard{
         let piece_bit = *piece_bitmap & (1 << pos);
         let moved = move_bits(piece_bit,pos,new_pos);
     
-        *piece_bitmap = (*piece_bitmap & !(1 << pos)) | moved;
+        *piece_bitmap = (*piece_bitmap & !(1u64 << pos as u32)) | moved;
     
     }
     
@@ -140,6 +140,19 @@ impl Bitboard{
         }
     }
 
+    pub fn promote_to(&mut self, pawn: i32, piece: i32) {
+        match (self.to_move, piece) {
+            (1, 1)  => { self.wp &= !(1u64 << pawn as u32); self.wq |= 1u64 << pawn as u32; }
+            (1, 2)  => { self.wp &= !(1u64 << pawn as u32); self.wr |= 1u64 << pawn as u32; }
+            (1, 3)  => { self.wp &= !(1u64 << pawn as u32); self.wn |= 1u64 << pawn as u32; }
+            (1, 4)  => { self.wp &= !(1u64 << pawn as u32); self.wb |= 1u64 << pawn as u32; }
+            (-1, 1) => { self.bp &= !(1u64 << pawn as u32); self.bq |= 1u64 << pawn as u32; }
+            (-1, 2) => { self.bp &= !(1u64 << pawn as u32); self.br |= 1u64 << pawn as u32; }
+            (-1, 3) => { self.bp &= !(1u64 << pawn as u32); self.bn |= 1u64 << pawn as u32; }
+            (-1, 4) => { self.bp &= !(1u64 << pawn as u32); self.bb |= 1u64 << pawn as u32; }
+            _ => panic!("Invalid promotion"),
+        }
+    }
 }
 pub fn letter_to_x(letter: char) -> i32{
     match letter{

@@ -3,9 +3,11 @@ mod bitboard;
 mod render;
 mod game;
 
-use crate::bitboard::Bitboard;
 use crate::render::render;
+use crate::game::Game;
+
 fn main(){
 
-    render(&Bitboard::new());
+    let mut game = Game::new();
+    game.play_game();
 }

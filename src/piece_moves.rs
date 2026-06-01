@@ -91,60 +91,76 @@ fn knight_possible_moves(board: &Bitboard,piece: i32) -> Vec<i32>{
     //2 left, 1 up/down
     if left_free > 1 {
         if top_free > 0{
-            match board.color_of(jumps[0]) == c{
-            true => moves.push(jumps[0]),
-            false => {},
+            let team = (board.color_of(jumps[0]) - c).abs();
+            match team {
+                0 => {},  // ally, skip
+                1 | 2 => moves.push(jumps[0]),  // empty or enemy
+                _ => panic!("Invalid team"),
             }
         }
         if bot_free > 0{
-            match board.color_of(jumps[1]) == c{
-            true => moves.push(jumps[1]),
-            false => {},
+            let team = (board.color_of(jumps[1]) - c).abs();
+            match team {
+                0 => {},  // ally, skip
+                1 | 2 => moves.push(jumps[1]),  // empty or enemy
+                _ => panic!("Invalid team"),
             }
         }
     }
     //1 left, 2 up/down
     if left_free > 0{
         if top_free > 1{
-            match board.color_of(jumps[2]) == c{
-            true => moves.push(jumps[2]),
-            false => {},
+            let team = (board.color_of(jumps[2]) - c).abs();
+            match team {
+                0 => {},  // ally, skip
+                1 | 2 => moves.push(jumps[2]),  // empty or enemy
+                _ => panic!("Invalid team"),
             }
         }
         if bot_free > 1{
-            match board.color_of(jumps[3]) == c{
-            true => moves.push(jumps[3]),
-            false => {},
+            let team = (board.color_of(jumps[3]) - c).abs();
+            match team {
+                0 => {},  // ally, skip
+                1 | 2 => moves.push(jumps[3]),  // empty or enemy
+                _ => panic!("Invalid team"),
             }
         }
     }
     //2 right, 1 up/down
     if right_free > 1{
         if top_free > 0{
-            match board.color_of(jumps[4]) == c{
-            true => moves.push(jumps[4]),
-            false => {},    
+            let team = (board.color_of(jumps[4]) - c).abs();
+            match team {
+                0 => {},  // ally, skip
+                1 | 2 => moves.push(jumps[4]),  // empty or enemy
+                _ => panic!("Invalid team"),
             }
         }
         if bot_free > 0{
-            match board.color_of(jumps[5]) == c{
-            true => moves.push(jumps[5]),
-            false => {},
+            let team = (board.color_of(jumps[5]) - c).abs();
+            match team {
+                0 => {},  // ally, skip
+                1 | 2 => moves.push(jumps[5]),  // empty or enemy
+                _ => panic!("Invalid team"),
             }
         }
     }
     //1 right, 2 up/down
     if right_free > 0{
         if top_free > 1{
-            match board.color_of(jumps[6]) == c{
-            true => moves.push(jumps[6]),
-            false => {},
+            let team = (board.color_of(jumps[6]) - c).abs();
+            match team {
+                0 => {},  // ally, skip
+                1 | 2 => moves.push(jumps[6]),  // empty or enemy
+                _ => panic!("Invalid team"),
             }
         }
         if bot_free > 1{
-            match board.color_of(jumps[7]) == c{
-            true => moves.push(jumps[7]),
-            false => {},
+            let team = (board.color_of(jumps[7]) - c).abs();
+            match team {
+                0 => {},  // ally, skip
+                1 | 2 => moves.push(jumps[7]),  // empty or enemy
+                _ => panic!("Invalid team"),
             }
         }
     }
@@ -319,7 +335,7 @@ fn king_possible_moves(board: &Bitboard,piece: i32) -> Vec<i32>{
         for square in from..to{
         pieces.push((board.color_of(square) - c).abs());
         }
-        if pieces.contains(&0) || pieces.contains(&2){
+        if pieces.iter().all(|&t| t == 1){
             moves.push(rook);
         }
     }
@@ -371,27 +387,24 @@ fn player_possible_moves(board: &Bitboard,include_king: bool) -> HashMap<i32,Vec
     }
     all_moves
 }
-
-pub fn is_legal(board: &Bitboard,from: i32,to: i32) -> bool{
+pub fn is_legal(board: &Bitboard, from: i32, to: i32) -> bool {
     let mut n_board = board.clone();
     n_board.move_piece(from, to);
-    
-    //will grab first king it sees from corresponding array
-    let king = match board.to_move{
-        1 => board.wk,
-        -1 => board.bk,
+    n_board.to_move *= -1; // switch to opponent's perspective
+
+    let king_pos = match board.to_move {
+        1  => n_board.wk.trailing_zeros() as i32,
+        -1 => n_board.bk.trailing_zeros() as i32,
         _ => panic!("Invalid color"),
     };
-    let king_pos = king.trailing_zeros() as i32;
-    let search_recursivity = false;
-    let moves = player_possible_moves(&n_board, search_recursivity);
-    moves
-        .into_iter()
-        .any(|(_k,v)| {
-            v.contains(&king_pos) 
-        })
-}
 
+    // if king is off board something went very wrong
+    if king_pos > 63 { return false; }
+
+    !player_possible_moves(&n_board, false)
+        .into_iter()
+        .any(|(_, v)| v.contains(&king_pos))
+}
 pub fn player_legal_moves(board: &Bitboard) -> HashMap<i32,Vec<i32>>{
     
     //get all possible moves
@@ -505,7 +518,8 @@ pub fn board_state(board: &Bitboard) -> i32{
 
     //for stalemate:
     //no legal moves
-    if !is_checked && can_move{ return 2; }
+    println!("Is checked: {is_checked} | can move {can_move}");
+    if !is_checked && !can_move{ return 2; }
     
     //50 moves (50 white 50 black) without captures
     if board.counter >= 100 { return 2; }

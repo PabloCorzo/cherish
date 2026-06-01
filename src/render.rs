@@ -3,14 +3,14 @@ use crate::bitboard::Bitboard;
  fn get_icon(board: &Bitboard, pos: i32) -> char {
     match board.piece_at(pos) {
         -1 => '♟',
-        -2 => '♘',
+        -2 => '♞',
         -3 => '♗',
         -4 => '♖',
         -5 => '♕',
         -6 => '♔',
 
          1 => '♙',
-         2 => '♞',
+         2 => '♘',
          3 => '♝',
          4 => '♜',
          5 => '♛',
