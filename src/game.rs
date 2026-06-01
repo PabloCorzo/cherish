@@ -111,11 +111,11 @@ pub fn play_game(&mut self) {
     let mut from;
     let mut to;
     let mut piece;
-    
+    let mut gamestate;
     loop {
-
-        let gamestate = board_state(&self.board);
-        println!("Gamestate is: {gamestate}");
+        
+        gamestate = board_state(&self.board);
+        // println!("Gamestate is: {gamestate}");
         if gamestate != 0 { break; }
 
         print_legal_moves(&self.board);
@@ -143,6 +143,14 @@ pub fn play_game(&mut self) {
         if self.mode != GameMode::Speed || (self.mode == GameMode::Speed && !capture) {
             self.board.to_move *= -1;
         }
+    }
+    render(&self.board);    
+    match gamestate{
+        1 => println!("White wins."),
+        -1 => println!("Black wins."),
+        2 => println!("Stalemate."),
+        _ => panic!("Invalid gamestate."),
+
     }
 }
 }

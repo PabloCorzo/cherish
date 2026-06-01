@@ -504,8 +504,10 @@ fn check_insufficiente_material(board: &Bitboard) -> bool {
 pub fn board_state(board: &Bitboard) -> i32{
     
     let mut mate = false;
-    let can_move = !player_legal_moves(board).is_empty();
+    let can_move = player_legal_moves(board).into_iter().any(|(_,v)| {!v.is_empty()});
     let is_checked = is_checked(board, board.to_move);
+    // print!("is checked: {is_checked}");
+    // print!("can move: {can_move}");
     if is_checked && !can_move { mate = true; }
 
     if mate{
