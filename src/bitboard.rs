@@ -1,3 +1,5 @@
+use rand::seq::SliceRandom;
+
 fn move_bits(bitmap: u64, from: i32, to: i32) -> u64 {
     if to >= from {
         bitmap << (to - from)
@@ -68,7 +70,38 @@ impl Bitboard{
         }    
      
     }     
-      
+    pub fn new_960() -> Self{
+
+        let mut board = Bitboard::new();
+
+        board.wp = 0xFF << 8;
+        board.bp = 0xFF << 48;
+
+        // piece codes: 1=rook 2=knight 3=bishop 4=queen 5=king
+        let mut backrank: [i32; 8] = [1, 1, 2, 2, 3, 3, 4, 5];
+        backrank.shuffle(&mut rand::rng());
+
+        board.wr = 0; board.wn = 0; board.wb = 0; board.wq = 0; board.wk = 0;
+        board.br = 0; board.bn = 0; board.bb = 0; board.bq = 0; board.bk = 0;
+        board.castle_rights.clear();
+
+        for (i, &piece) in backrank.iter().enumerate() {
+            let wsq = i as u64;
+            let bsq = (56 + i) as u64;
+            match piece {
+                1 => { board.wr |= 1u64 << wsq; board.br |= 1u64 << bsq;
+                       board.castle_rights.push(i as i32); board.castle_rights.push((56 + i) as i32); }
+                2 => { board.wn |= 1u64 << wsq; board.bn |= 1u64 << bsq; }
+                3 => { board.wb |= 1u64 << wsq; board.bb |= 1u64 << bsq; }
+                4 => { board.wq |= 1u64 << wsq; board.bq |= 1u64 << bsq; }
+                5 => { board.wk |= 1u64 << wsq; board.bk |= 1u64 << bsq;
+                       board.castle_rights.push(i as i32); board.castle_rights.push((56 + i) as i32); }
+                _ => unreachable!(),
+            }
+        }
+
+        board
+    }      
     pub fn piece_at(&self,square: i32) -> i32{
         if square < 0 || square > 63 {return -1;}
         let square: u32 = square as u32;

@@ -1,4 +1,4 @@
-use crate::piece_moves::{board_state, has_moves, is_capture, is_legal, is_promotion, player_legal_moves};
+use crate::piece_moves::{board_state, is_capture, is_promotion, player_legal_moves};
 use crate::bitboard::{Bitboard,letter_to_x};
 use crate::render::render; 
 use std::io;
@@ -23,7 +23,7 @@ fn sq_to_name(sq: i32) -> String {
     format!("{}{}", file, rank)
 }
 #[derive(PartialEq)]
-enum GameMode{
+pub enum GameMode{
     Std,
     N60,
     Speed,
@@ -52,9 +52,15 @@ impl Game{
     pub fn new() -> Self{
         Game{ board: Bitboard::new(), mode: GameMode::Std, state: 0 }
     }
-    
+   
+
     pub fn new_alt(gamemode: GameMode) -> Self{
-        Game { board: Bitboard::new(), mode: gamemode, state: 0 }
+        
+        let board = match gamemode{
+            GameMode::N60 => Bitboard::new_960(),
+            _ => Bitboard::new(),
+        };
+        Game { board, mode: gamemode, state: 0 }
     }
 
    pub fn validate_input(&self,board: &Bitboard, mut input: String) -> (i32,i32,i32){
