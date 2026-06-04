@@ -5,8 +5,7 @@ mod game;
 
 
 use std::env;
-use crate::game::{Game,GameMode::{self, Std}};
-
+use crate::game::{Game,GameMode};
 fn main(){
     
     let args:Vec<String> = env::args().collect();

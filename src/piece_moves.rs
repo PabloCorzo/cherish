@@ -501,7 +501,7 @@ fn check_insufficiente_material(board: &Bitboard) -> bool {
 }
 
 
-pub fn board_state(board: &Bitboard) -> i32{
+pub fn board_state(board: &Bitboard,states: &HashMap<[u64;12],i32>) -> i32{
     
     let mut mate = false;
     let can_move = player_legal_moves(board).into_iter().any(|(_,v)| {!v.is_empty()});
@@ -535,7 +535,8 @@ pub fn board_state(board: &Bitboard) -> i32{
     if insufficient_material { return 2; } 
 
     //3 board repetitions
-    
+    let repeated = states.into_iter().any(|(_s,v)| { *v > 2});
+    if repeated {return 2;}
 
     0
 }

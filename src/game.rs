@@ -3,6 +3,8 @@ use crate::bitboard::{Bitboard,letter_to_x};
 use crate::render::render; 
 use std::io;
 use std::io::Write;
+use std::collections::HashMap;
+
 pub fn print_legal_moves(board: &Bitboard) {
     let moves = player_legal_moves(board);
     let mut entries: Vec<(i32, Vec<i32>)> = moves.into_iter().collect();
@@ -42,15 +44,18 @@ pub fn get_input() -> String{
                                                                                                                                                                                                        
   }            
 
+
+
+
 pub struct Game{
     board: Bitboard,
     mode: GameMode,
-    state: i32,
+    states: HashMap<[u64;12],i32>,
 }
 impl Game{
 
     pub fn new() -> Self{
-        Game{ board: Bitboard::new(), mode: GameMode::Std, state: 0 }
+        Game{ board: Bitboard::new(), mode: GameMode::Std, states: HashMap::new(),}
     }
    
 
@@ -60,9 +65,18 @@ impl Game{
             GameMode::N60 => Bitboard::new_960(),
             _ => Bitboard::new(),
         };
-        Game { board, mode: gamemode, state: 0 }
+        Game { board, mode: gamemode, states: HashMap::new()}
     }
+    
+    pub fn store_position(&mut self){
+        
+        let arr = [self.board.wp,self.board.wr,self.board.wn,self.board.wb,self.board.wq,self.board.wk,
+        self.board.bp,self.board.br,self.board.bn,self.board.bb,self.board.bq,self.board.bk];
+        
 
+        *self.states.entry(arr).or_insert(0) += 1;
+    }
+    
    pub fn validate_input(&self,board: &Bitboard, mut input: String) -> (i32,i32,i32){
        //I.E. e2e4q, where q is piece to promote to.
        //if not promoting and added it will be invalid
@@ -120,7 +134,7 @@ pub fn play_game(&mut self) {
     let mut gamestate;
     loop {
         
-        gamestate = board_state(&self.board);
+        gamestate = board_state(&self.board,&self.states);
         // println!("Gamestate is: {gamestate}");
         if gamestate != 0 { break; }
 
@@ -149,6 +163,7 @@ pub fn play_game(&mut self) {
         if self.mode != GameMode::Speed || (self.mode == GameMode::Speed && !capture) {
             self.board.to_move *= -1;
         }
+        self.store_position();
     }
     render(&self.board);    
     match gamestate{
