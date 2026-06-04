@@ -160,6 +160,21 @@ impl Bitboard{
         return;
     }
 
+    // clear the captured piece's bit before moving the attacker
+    let target = self.piece_at(new_pos);
+    if target != 0 {
+        let captured = match target {
+            1  => &mut self.wp,  -1 => &mut self.bp,
+            2  => &mut self.wn,  -2 => &mut self.bn,
+            3  => &mut self.wb,  -3 => &mut self.bb,
+            4  => &mut self.wr,  -4 => &mut self.br,
+            5  => &mut self.wq,  -5 => &mut self.bq,
+            6  => &mut self.wk,  -6 => &mut self.bk,
+            _ => panic!("Invalid piece at capture target"),
+        };
+        *captured &= !(1u64 << new_pos as u32);
+    }
+
     let piece_bitmap = match piece {
         1  => &mut self.wp,
         -1 => &mut self.bp,
