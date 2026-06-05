@@ -1,17 +1,9 @@
-✅Legal move collection should check if a move checks yourself (pin), dont think its doing that as of now.
-✅terminal board print w/o tui
+Pawn en passant capture not working
 
-pawn promotion:
-	✅- change input mode to add a 'e7 e8 Q' where Q is piece to promote to
-	✅- change the move its promoted to in notation, rn its queen hardcoded
+960 castle breaks if rook and king start next to each other
 
-✅en passant is broken. 
+randombot move selector and bot game api
 
-change log format to count 2 moves as a turn instead of 1:1
+DL model based on linear regression evaluation?
 
-python gui mode 
 
-move to notation is missing check, checkmate and maybe castling? 
-
-local socket connection and boardstate transfer for IPC
-python DL model perchance
