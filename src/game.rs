@@ -1,9 +1,12 @@
 use crate::piece_moves::{board_state, is_capture, is_promotion, player_legal_moves,move_to_notation};
 use crate::bitboard::{Bitboard,letter_to_x};
 use crate::render::render; 
+use crate::bots::randombot::RandomBot;
 use std::io;
 use std::io::Write;
 use std::collections::HashMap;
+
+
 
 pub fn print_legal_moves(board: &Bitboard) {
     let moves = player_legal_moves(board);
@@ -31,7 +34,11 @@ pub enum GameMode{
     Speed,
 }
 
-
+#[derive(PartialEq)]
+pub enum Bot{
+    Random,
+    Search,
+}
 pub fn get_input() -> String{                                                                                                                                                                            
     print!("Enter your move: ");                                                                                                                                                                     
     io::stdout().flush().unwrap();                                                                                                                                                                   
@@ -150,12 +157,63 @@ pub fn play_game(&mut self) {
         let promotion = is_promotion(&self.board, (from, to));
         let capture = is_capture(&self.board, (from, to));
 
-
-
         let legal = player_legal_moves(&self.board)
             .into_iter()
             .any(|(k,v)| { k == from && v.contains(&to)});
         if !legal { continue; }
+
+        //log if flagged as logged game
+        if self.minlog{ self.log(from,to,piece); }
+        self.counter += 1;
+
+        self.board.move_piece(from, to);
+        if promotion { self.board.promote_to(to, piece); }
+        if self.mode != GameMode::Speed || (self.mode == GameMode::Speed && !capture) {
+            self.board.to_move *= -1;
+        }
+        self.store_position();
+    }
+    render(&self.board);    
+    match gamestate{
+        1 => println!("White wins in {} moves",self.counter),
+        -1 => println!("Black wins in {} moves",self.counter),
+        2 => println!("Stalemate in  {} moves",self.counter),
+        _ => panic!("Invalid gamestate."),
+
+    }
+
+    if self.minlog{ println!("{}", self.record);}
+}
+
+
+pub fn bot_game(&mut self,white_type: Bot, black_type: Bot,shown: bool){
+
+
+
+   let white = RandomBot::new();
+   let black = RandomBot::new(); 
+   let mut players = [white,black]; 
+   let mut from;
+    let mut to;
+    let mut piece;
+    let mut gamestate;
+    loop {
+        
+        gamestate = board_state(&self.board,&self.states);
+        // println!("Gamestate is: {gamestate}");
+        if gamestate != 0 { break; }
+
+        if shown{render(&self.board);}
+        let player = match self.board.to_move{
+            1 => 0,
+            -1 => 1,
+            _ => panic!("Invalid color."),
+        };
+        //bots will handle move validity
+        (from, to, piece) = players[player].get_move(&mut self.board);
+
+        let promotion = is_promotion(&self.board, (from, to));
+        let capture = is_capture(&self.board, (from, to));
 
         //log if flagged as logged game
         if self.minlog{ self.log(from,to,piece); }
@@ -178,6 +236,9 @@ pub fn play_game(&mut self) {
     }
 
     if self.minlog{ println!("{}", self.record);}
+
+
+    
 }
 
 fn log(&mut self, from:i32, to:i32,promoted_to: i32){
@@ -190,3 +251,4 @@ fn log(&mut self, from:i32, to:i32,promoted_to: i32){
     }
 }
 }
+

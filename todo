@@ -1,9 +1,9 @@
-Pawn en passant capture not working
+BUG: 1B2R3/3k4/2PP4/8/1N2Prp1/2R1Q1bp/3K4/r4qN1 w - - 0 1
+image shows the bug: its apparent checkmate
 
-960 castle breaks if rook and king start next to each other
+960 castle breaks if rook and king start next to each other -> not a priority
 
 randombot move selector and bot game api
 
 DL model based on linear regression evaluation?
-
 

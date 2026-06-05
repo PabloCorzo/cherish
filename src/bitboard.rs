@@ -144,7 +144,6 @@ impl Bitboard{
     //if en passant, remove piece at same quotient but +- 1 mod
     if en_pas{
         let remove_pos = (pos / 8) * 8 + (new_pos % 8);
-        println!("REMOVE POS: {remove_pos}");
         let pawns = match self.to_move{
             1 => &mut self.bp,
             -1 => &mut self.wp,
@@ -220,7 +219,6 @@ impl Bitboard{
     let moved = move_bits(piece_bit, pos, new_pos);
     *piece_bitmap = (*piece_bitmap & !(1u64 << pos as u32)) | moved;
    }
-    
     // Do abs of color_of - c, result will be:
     //     0 for ally
     //     1 for empty

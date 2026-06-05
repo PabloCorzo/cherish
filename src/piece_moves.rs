@@ -444,7 +444,7 @@ pub fn is_promotion(board: &Bitboard, fromto: (i32,i32)) -> bool{
         -1 => (0,1),
         _ => panic!("invalid color"),
     };
-   fromto.0 / 8 == second_last_rank && fromto.1 == last_rank 
+   fromto.0 / 8 == second_last_rank && fromto.1 / 8== last_rank 
  }
 
 pub fn is_checked(_board: &Bitboard, c: i32) -> bool{
@@ -518,7 +518,6 @@ pub fn board_state(board: &Bitboard,states: &HashMap<[u64;12],i32>) -> i32{
 
     //for stalemate:
     //no legal moves
-    println!("Is checked: {is_checked} | can move {can_move}");
     if !is_checked && !can_move{ return 2; }
     
     //50 moves (50 white 50 black) without captures
