@@ -1,4 +1,4 @@
-use crate::bitboard::Bitboard;
+use crate::{bitboard::Bitboard, render::render};
 use std::{collections::HashMap};
 
 fn pawn_possible_moves(board: &Bitboard,piece: i32) -> Vec<i32>{
@@ -462,7 +462,7 @@ pub fn is_checked(_board: &Bitboard, c: i32) -> bool{
     let king_pos = king.trailing_zeros() as i32;
     player_legal_moves(&board)
         .into_iter()
-        .any(|(k,v)| {v.contains(&king_pos)})
+        .any(|(_k,v)| {v.contains(&king_pos)})
 }
 
 pub fn is_capture(board: &Bitboard,fromto: (i32,i32)) -> bool{
@@ -570,12 +570,11 @@ pub fn move_to_notation(board: &mut Bitboard,piece: i32,new_pos: i32,promoted_to
             let to_char = board.pos_to_letter(new_pos);
             
             //exd7
-            notation.push_str( &format!("{from_char}x{to_char}{to_num}"));  
+            notation.push_str( &format!("{}x{}{}",from_char,to_char,to_num + 1));  
         }   
 
         else{
-            let from_num = piece / 8;
-            notation.push_str( &format!("{from_char}{from_num}{to_num}"));  
+            notation.push_str( &format!("{}{}",from_char,to_num + 1));  
         }
         
         //queen,rook,knight,bishop in ascending order from 1
@@ -597,20 +596,29 @@ pub fn move_to_notation(board: &mut Bitboard,piece: i32,new_pos: i32,promoted_to
     let declare_v = vertical_ambiguity(board, piece, new_pos);
 
     if declare_h {notation.push( board.pos_to_letter(piece) );}
-    if declare_v {notation.push_str( &format!("{}",piece / 8) );}
+    if declare_v {notation.push_str( &format!("{}",(piece / 8)  + 1) );}
     
-    notation.push_str( &format!("{}{}", board.pos_to_letter(new_pos), new_pos / 8));
+    notation.push_str( &format!("{}{}", board.pos_to_letter(new_pos), (new_pos / 8) + 1));
 
     }
     
 
+    //log happens before move, so create a clone of board 
+    //to recreate next state to check if its mate or just a check
     let mut board_clone = board.clone();
     board_clone.move_piece(piece, new_pos);
+    board_clone.to_move *= -1;
     // hashmap of states does not matter here so just create an empty one
     let foo: HashMap<[u64;12],i32> = HashMap::new(); 
+    
     let state = board_state(&board_clone,&foo);
+
     //if puts in check, add +
-    if is_checked(&board_clone, board_clone.to_move) && state == 0 {notation.push('+');} 
+    let checked = is_checked(&board_clone, board_clone.to_move);
+
+    println!("STATE: {state} | CHECKED: {checked} | c: {}",board_clone.to_move);
+    render(&board_clone);
+    if checked && state == 0 {notation.push('+');} 
     //if its checkmate, add #
     else if is_checked(&board_clone,board_clone.to_move) && state.abs() == 1 {notation.push('#')}
 
