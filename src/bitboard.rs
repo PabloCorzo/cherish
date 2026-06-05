@@ -137,7 +137,23 @@ impl Bitboard{
         
     if piece.abs() == 6 || piece.abs() == 4 {self.castle_rights.retain(|&p| { p != pos} );}
     
-    //en passant check
+
+    //is en passant check
+    let en_pas = self.piece_at(pos).abs() == 1 && (pos % 8 != new_pos % 8) && self.piece_at(new_pos) == 0;
+    //println!("EN PASSANT: {en_pas} | {new_pos}");
+    //if en passant, remove piece at same quotient but +- 1 mod
+    if en_pas{
+        let remove_pos = (pos / 8) * 8 + (new_pos % 8);
+        println!("REMOVE POS: {remove_pos}");
+        let pawns = match self.to_move{
+            1 => &mut self.bp,
+            -1 => &mut self.wp,
+            _ => panic!("Invalid color"),
+        };
+        
+        *pawns &= !(1u64 << remove_pos as u32);
+    }
+    //creates en passant option
     self.en_passant = -1;
     if self.piece_at(pos).abs() == 1{
 
