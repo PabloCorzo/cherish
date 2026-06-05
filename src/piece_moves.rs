@@ -559,10 +559,13 @@ pub fn move_to_notation(board: &mut Bitboard,piece: i32,new_pos: i32,promoted_to
 
         let capture = is_capture(board, (piece,new_pos));
 
+        let en_pas = (piece % 8 != new_pos % 8) && board.piece_at(new_pos) == 0;
+        
         let from_char = board.pos_to_letter(piece);
         let to_num = new_pos / 8; //dont ask why im doing this here instead of bitboard, i dont know.
 
-        if capture {
+
+        if capture || en_pas{
 
             let to_char = board.pos_to_letter(new_pos);
             
