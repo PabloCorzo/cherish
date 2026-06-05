@@ -222,6 +222,21 @@ impl Bitboard{
             _ => panic!("Invalid promotion"),
         }
     }
+
+    pub fn pos_to_letter(&self,pos: i32) -> char{
+
+        match pos % 8 {
+            0 => 'a',
+            1 => 'b',
+            2 => 'c',
+            3 => 'd',
+            4 => 'e',
+            5 => 'f',
+            6 => 'g',
+            7 => 'h',
+            _ => panic!("mod 8 broke"),
+        }
+    }
 }
 pub fn letter_to_x(letter: char) -> i32{
     match letter{

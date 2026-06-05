@@ -1,4 +1,4 @@
-use crate::piece_moves::{board_state, is_capture, is_promotion, player_legal_moves};
+use crate::piece_moves::{board_state, is_capture, is_promotion, player_legal_moves,move_to_notation};
 use crate::bitboard::{Bitboard,letter_to_x};
 use crate::render::render; 
 use std::io;
@@ -45,27 +45,28 @@ pub fn get_input() -> String{
   }            
 
 
-
-
 pub struct Game{
     board: Bitboard,
     mode: GameMode,
     states: HashMap<[u64;12],i32>,
+    minlog: bool,
+    record: String,
+    counter: u32,
 }
 impl Game{
 
-    pub fn new() -> Self{
-        Game{ board: Bitboard::new(), mode: GameMode::Std, states: HashMap::new(),}
+    pub fn new(minlog: bool) -> Self{
+        Game{ board: Bitboard::new(), mode: GameMode::Std, states: HashMap::new(),minlog,record: String::new(),counter: 0}
     }
    
 
-    pub fn new_alt(gamemode: GameMode) -> Self{
+    pub fn new_alt(gamemode: GameMode,minlog: bool) -> Self{
         
         let board = match gamemode{
             GameMode::N60 => Bitboard::new_960(),
             _ => Bitboard::new(),
         };
-        Game { board, mode: gamemode, states: HashMap::new()}
+        Game { board, mode: gamemode, states: HashMap::new(),minlog,record: String::new(),counter: 0}
     }
     
     pub fn store_position(&mut self){
@@ -156,7 +157,9 @@ pub fn play_game(&mut self) {
             .any(|(k,v)| { k == from && v.contains(&to)});
         if !legal { continue; }
 
-
+        //log if flagged as logged game
+        if self.minlog{ self.log(from,to,piece); }
+        self.counter += 1;
 
         self.board.move_piece(from, to);
         if promotion { self.board.promote_to(to, piece); }
@@ -171,6 +174,18 @@ pub fn play_game(&mut self) {
         -1 => println!("Black wins."),
         2 => println!("Stalemate."),
         _ => panic!("Invalid gamestate."),
+
+    }
+
+    if self.minlog{ println!("{}", self.record);}
+}
+
+fn log(&mut self, from:i32, to:i32,promoted_to: i32){
+    let notation = move_to_notation(&mut self.board, from, to, promoted_to);
+    match self.counter % 2{
+        0 => self.record.push_str(&format!("{notation} | ")),
+        1 => self.record.push_str(&format!("{notation}\n")),
+        _ => panic!("Mod 2 broke.")
 
     }
 }

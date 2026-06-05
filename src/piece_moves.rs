@@ -540,3 +540,102 @@ pub fn board_state(board: &Bitboard,states: &HashMap<[u64;12],i32>) -> i32{
 
     0
 }
+
+//given a piece and its new location, trusting its right by other code checking for it
+pub fn move_to_notation(board: &mut Bitboard,piece: i32,new_pos: i32,promoted_to: i32)-> String{
+    
+
+    let mut notation = String::new();
+
+    let initial: char = match board.piece_at(piece).abs() {
+        1 => 'p', //unused
+        2 => 'N',
+        3 => 'B',
+        4 => 'R',
+        5 => 'Q',
+        6 => 'K',
+        _ => panic!("Invalid piece at: {piece}"),
+    };
+
+    //pawn 
+    if initial == 'p'{
+
+        let capture = is_capture(board, (piece,new_pos));
+
+        let from_char = board.pos_to_letter(piece);
+        let to_num = new_pos / 8; //dont ask why im doing this here instead of bitboard, i dont know.
+
+        if capture {
+
+            let to_char = board.pos_to_letter(new_pos);
+            
+            //exd7
+            notation.push_str( &format!("{from_char}x{to_char}{to_num}"));  
+        }   
+
+        else{
+            let from_num = piece / 8;
+            notation.push_str( &format!("{from_char}{from_num}{to_num}"));  
+        }
+        
+        //queen,rook,knight,bishop in ascending order from 1
+        match promoted_to{
+            0 => {},
+            1 => notation.push_str("=Q"),   
+            2 => notation.push_str("=R"),
+            3 => notation.push_str("=N"),
+            4 => notation.push_str("=B"),
+            _ => panic!("Invalid promotion code"),
+        }
+    }
+
+
+    else{
+
+    notation.push(initial);
+    let declare_h = horizontal_ambiguity(board, piece, new_pos);
+    let declare_v = vertical_ambiguity(board, piece, new_pos);
+
+    if declare_h {notation.push( board.pos_to_letter(piece) );}
+    if declare_v {notation.push_str( &format!("{}",piece / 8) );}
+    
+    notation.push_str( &format!("{}{}", board.pos_to_letter(new_pos), new_pos / 8));
+
+    }
+    
+
+    let mut board_clone = board.clone();
+    board_clone.move_piece(piece, new_pos);
+    // hashmap of states does not matter here so just create an empty one
+    let foo: HashMap<[u64;12],i32> = HashMap::new(); 
+    let state = board_state(&board_clone,&foo);
+    //if puts in check, add +
+    if is_checked(&board_clone, board_clone.to_move) && state == 0 {notation.push('+');} 
+    //if its checkmate, add #
+    else if is_checked(&board_clone,board_clone.to_move) && state.abs() == 1 {notation.push('#')}
+
+    notation
+
+}   
+
+
+fn vertical_ambiguity(board: &Bitboard, piece: i32,dest: i32) -> bool{
+    
+    let p_type = board.piece_at(piece);
+    player_legal_moves(board)
+        .into_iter()
+        .any(|(p,moves)| {
+            p != piece && board.piece_at(p) == p_type && moves.contains(&dest) && (piece % 8 == p % 8)
+        })   
+
+}
+
+fn horizontal_ambiguity(board: &Bitboard, piece: i32,dest: i32) -> bool{
+
+    let p_type = board.piece_at(piece);
+    player_legal_moves(board)
+        .into_iter()
+        .any(|(p,moves)| {
+            p != piece && board.piece_at(p) == p_type && moves.contains(&dest) && (piece / 8 == p / 8)
+        })   
+}
