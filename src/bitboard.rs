@@ -27,7 +27,7 @@ pub struct Bitboard{
     pub bq : u64,    
     pub bk : u64,    
     pub to_move: i32,
-    pub en_passant: Option<i32>,
+    pub en_passant: i32,
     pub castle_rights: Vec<i32>,
     pub counter: i32,
 }
@@ -63,7 +63,7 @@ impl Bitboard{
             bq: 0x08 << 56,
             bk: 0x10 << 56,
            
-            en_passant: None,
+            en_passant: -1,
             to_move:1,
             castle_rights,
             counter: 0,
@@ -136,7 +136,16 @@ impl Bitboard{
     let castle = piece.abs() == 6 && self.piece_at(new_pos).abs() == 4;
         
     if piece.abs() == 6 || piece.abs() == 4 {self.castle_rights.retain(|&p| { p != pos} );}
+    
+    //en passant check
+    self.en_passant = -1;
+    if self.piece_at(pos).abs() == 1{
 
+        let (major,minor) = (std::cmp::max(pos, new_pos),std::cmp::min(pos, new_pos));
+        if (major / 8) - (minor / 8) == 2{
+            self.en_passant = minor + 8;
+        }
+    }
 
     let team = (self.color_of(new_pos) - self.to_move).abs();
     if team == 2 { self.counter = 0; }

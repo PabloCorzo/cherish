@@ -59,13 +59,10 @@ fn pawn_possible_moves(board: &Bitboard,piece: i32) -> Vec<i32>{
     }
 
     //en passant check
-    let en_passant = match board.en_passant{
-        Some(i) => i,
-        None => 64,
-    };
-    
-    if en_passant == dr {moves.push(dr);}
-    if en_passant == dl {moves.push(dl);}
+    if board.en_passant == -1 {return moves;}
+
+    if board.en_passant == dr {moves.push(dr);}
+    if board.en_passant == dl {moves.push(dl);}
 
     moves
 }
