@@ -1,4 +1,4 @@
-use crate::{bitboard::Bitboard, render::render};
+use crate::{bitboard::Bitboard};
 use std::{collections::HashMap};
 
 fn pawn_possible_moves(board: &Bitboard,piece: i32) -> Vec<i32>{
@@ -297,7 +297,7 @@ fn king_possible_moves(board: &Bitboard,piece: i32) -> Vec<i32>{
             1 => moves.push(square),
             2 => {
                 moves.push(square);
-                break;
+                continue;
             },
             _ => panic!("Team identification via color of subtract is wrong."),
         }
@@ -434,7 +434,7 @@ pub fn has_moves(board: &mut Bitboard,c: i32) -> bool{
     board.to_move = c;
     let moves = player_legal_moves(board);
     board.to_move = prev_c;
-    !moves.is_empty()
+    !moves.into_iter().all(|(_,v)| {v.is_empty()})
 }
 
 pub fn is_promotion(board: &Bitboard, fromto: (i32,i32)) -> bool{
@@ -617,7 +617,6 @@ pub fn move_to_notation(board: &mut Bitboard,piece: i32,new_pos: i32,promoted_to
     let checked = is_checked(&board_clone, board_clone.to_move);
 
     println!("STATE: {state} | CHECKED: {checked} | c: {}",board_clone.to_move);
-    render(&board_clone);
     if checked && state == 0 {notation.push('+');} 
     //if its checkmate, add #
     else if is_checked(&board_clone,board_clone.to_move) && state.abs() == 1 {notation.push('#')}
