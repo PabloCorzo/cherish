@@ -66,7 +66,9 @@ impl Game{
         Game{ board: Bitboard::new(), mode: GameMode::Std, states: HashMap::new(),minlog,record: String::new(),counter: 0}
     }
    
-
+    pub fn new_preloaded(board: Bitboard, minlog: bool) -> Self{
+        Game{ board, mode: GameMode::Std, states: HashMap::new(),minlog,record: String::new(),counter: 0}
+    }
     pub fn new_alt(gamemode: GameMode,minlog: bool) -> Self{
         
         let board = match gamemode{
@@ -236,7 +238,7 @@ pub fn bot_game(&mut self,white_type: Bot, black_type: Bot,shown: bool){
     }
 
     if self.minlog{ println!("{}", self.record);}
-
+    self.board.print_fen();
 
     
 }
