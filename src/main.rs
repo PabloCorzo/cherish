@@ -25,7 +25,7 @@ fn main(){
 
     let b = match debug{
         false => Bitboard::new(), 
-        true => Bitboard::new_from_fen("1R6/k7/8/6B1/8/4K3/R7/2B5 b - - 18 9"),
+        true => Bitboard::new_from_fen("8/8/3B4/4K1k1/8/8/8/3R4 w - - 0 1"),
     };
     let mut game = match gamemode{
         GameMode::Speed => Game::new_alt(GameMode::Speed,minlog),
