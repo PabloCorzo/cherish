@@ -253,7 +253,7 @@ pub fn new_from_fen(fen: &str) -> Self {
     let piece = self.piece_at(pos as i32);
     if piece == 0 { panic!("Tried to move none piece at {}", pos); }
     
-    let castle = piece.abs() == 6 && self.piece_at(new_pos).abs() == 4;
+    let castle = piece.abs() == 6 && self.piece_at(new_pos).abs() == 4 && piece * self.piece_at(new_pos) > 0;
         
     if piece.abs() == 6 || piece.abs() == 4 {self.castle_rights.retain(|&p| { p != pos} );}
     

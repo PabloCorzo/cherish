@@ -1,4 +1,4 @@
-use crate::{bitboard::Bitboard};
+use crate::{bitboard::Bitboard, render::render};
 use std::{collections::HashMap};
 
 fn pawn_possible_moves(board: &Bitboard,piece: i32) -> Vec<i32>{
@@ -272,6 +272,7 @@ fn king_possible_moves(board: &Bitboard,piece: i32) -> Vec<i32>{
     let top_free = 7 - (piece / 8);
     let bot_free = piece / 8;
     
+    println!("FOR KING IN {piece}\nSquares are: {:?}", squares);
     if left_free == 0{
         squares[0] = 64;
         squares[3] = 64;
@@ -284,10 +285,10 @@ fn king_possible_moves(board: &Bitboard,piece: i32) -> Vec<i32>{
         squares[7] = 64;
     }
     if top_free == 0{
-        squares[1] = 64;
+        squares[6] = 64;
     }
     if bot_free == 0{
-        squares[6] = 64;
+        squares[1] = 64;
     }
 
     println!("FOR KING IN {piece}\nSquares are: {:?}", squares);
@@ -316,7 +317,10 @@ fn king_possible_moves(board: &Bitboard,piece: i32) -> Vec<i32>{
     let king_rank = piece / 8;
     let mut rank;
 
-    if !board.castle_rights.contains(&piece) {return moves;} 
+    if !board.castle_rights.contains(&piece) {
+        // println!("MOVES: {:?}",moves);
+        return moves;
+    } 
     while rooks != 0{
         let sq = rooks.trailing_zeros() as i32; //gives LSB
         rooks &= rooks - 1;
@@ -392,12 +396,18 @@ pub fn is_legal(board: &Bitboard, from: i32, to: i32) -> bool {
     n_board.move_piece(from, to);
     n_board.to_move *= -1; // switch to opponent's perspective
 
+    //DEBUG LOGGING FOR POSSIBLE KING MOVES, swap num to king pos
+    if from == 48 {
+        // println!("///");
+        // render(&n_board);
+        // println!("///");
+    }
+
     let king_pos = match board.to_move {
         1  => n_board.wk.trailing_zeros() as i32,
         -1 => n_board.bk.trailing_zeros() as i32,
         _ => panic!("Invalid color"),
     };
-
     // if king is off board something went very wrong
     if king_pos > 63 { return false; }
 
@@ -424,6 +434,10 @@ pub fn player_legal_moves(board: &Bitboard) -> HashMap<i32,Vec<i32>>{
         
         //insert into new map the legal ones
         legals.insert(from,piece_legals);
+    }
+
+    for (p,moves) in legals.iter(){
+        if p == &48 {println!("KING LEGALS: {:?}",moves);}
     }
     legals
 
@@ -520,7 +534,10 @@ pub fn board_state(board: &Bitboard,states: &HashMap<[u64;12],i32>) -> i32{
 
     //for stalemate:
     //no legal moves
-    if !is_checked && !can_move{ return 2; }
+    if !is_checked && !can_move{ 
+        println!("Stalemate by no legal moves available");
+        return 2;
+    }
     
     //50 moves (50 white 50 black) without captures
     if board.counter >= 100 { return 2; }
@@ -530,11 +547,17 @@ pub fn board_state(board: &Bitboard,states: &HashMap<[u64;12],i32>) -> i32{
     // King & Bishop v King
     // King & Knight v King
     let insufficient_material = check_insufficiente_material(board);
-    if insufficient_material { return 2; } 
+    if insufficient_material {
+        println!("Stalemate by insufficient_material");
+        return 2;
+    } 
 
     //3 board repetitions
     let repeated = states.into_iter().any(|(_s,v)| { *v > 2});
-    if repeated {return 2;}
+    if repeated {
+        println!("Stalemate by repetition");
+        return 2;
+    }
 
     0
 }
