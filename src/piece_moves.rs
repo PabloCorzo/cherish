@@ -272,7 +272,7 @@ fn king_possible_moves(board: &Bitboard,piece: i32) -> Vec<i32>{
     let top_free = 7 - (piece / 8);
     let bot_free = piece / 8;
     
-    println!("FOR KING IN {piece}\nSquares are: {:?}", squares);
+    // println!("FOR KING IN {piece}\nSquares are: {:?}", squares);
     if left_free == 0{
         squares[0] = 64;
         squares[3] = 64;
@@ -291,7 +291,7 @@ fn king_possible_moves(board: &Bitboard,piece: i32) -> Vec<i32>{
         squares[1] = 64;
     }
 
-    println!("FOR KING IN {piece}\nSquares are: {:?}", squares);
+    // println!("FOR KING IN {piece}\nSquares are: {:?}", squares);
     for square in squares.into_iter(){
         if square < 0 || square > 63 {continue;}
         let team = (board.color_of(square) - c).abs();
@@ -410,10 +410,19 @@ pub fn is_legal(board: &Bitboard, from: i32, to: i32) -> bool {
     };
     // if king is off board something went very wrong
     if king_pos > 63 { return false; }
+    
 
+    //KING RECURSIVITY BEING OFF MEANS IF A KING MOVE WOULD PLACE HIM INTO ENEMY KING RANGE ITS NOT
+    //DETECTED, SO GATHER THOSE APART AND CHECK
+    let enemy_king = match board.to_move{
+        1 => board.bk.trailing_zeros() as i32,
+        -1 => board.wk.trailing_zeros() as i32,
+        _ => panic!("Invalid color"),
+    };
+    let enemy_king_moves = king_possible_moves(&board, enemy_king);
     !player_possible_moves(&n_board, false)
         .into_iter()
-        .any(|(_, v)| v.contains(&king_pos))
+        .any(|(_, v)| v.contains(&king_pos)) && !enemy_king_moves.contains(&king_pos)
 }
 pub fn player_legal_moves(board: &Bitboard) -> HashMap<i32,Vec<i32>>{
     
