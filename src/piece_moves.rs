@@ -262,7 +262,8 @@ fn queen_possible_moves(board: &Bitboard,piece: i32) -> Vec<i32>{
 fn king_possible_moves(board: &Bitboard,piece: i32) -> Vec<i32>{
     let c = board.to_move;
     let mut moves: Vec<i32> =  Vec::new();
-    let mut squares: [i32;8] = [piece + 7,piece + 8,piece + 9, piece -1,piece + 1, piece -7, piece - 8, piece - 9];
+    // let mut squares: [i32;8] = [piece + 7,piece + 8,piece + 9, piece - 1,piece + 1, piece -7, piece - 8, piece - 9];
+    let mut squares: [i32;8] = [piece - 9,piece - 8,piece - 7, piece - 1,piece + 1, piece + 7, piece + 8, piece + 9];
     
     //check if bit offsets are right for edge positions
     let file = piece % 8;
@@ -289,6 +290,7 @@ fn king_possible_moves(board: &Bitboard,piece: i32) -> Vec<i32>{
         squares[6] = 64;
     }
 
+    println!("FOR KING IN {piece}\nSquares are: {:?}", squares);
     for square in squares.into_iter(){
         if square < 0 || square > 63 {continue;}
         let team = (board.color_of(square) - c).abs();
