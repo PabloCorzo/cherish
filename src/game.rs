@@ -2,11 +2,15 @@ use crate::piece_moves::{board_state, is_capture, is_promotion, player_legal_mov
 use crate::bitboard::{Bitboard,letter_to_x};
 use crate::render::render; 
 use crate::bots::randombot::RandomBot;
+use crate::bots::bardbot::BardBot;
 use std::io;
 use std::io::Write;
 use std::collections::HashMap;
 
 
+pub trait GetMove {
+    fn get_move(&mut self, board: &Bitboard) -> (i32,i32,i32);
+}
 
 pub fn print_legal_moves(board: &Bitboard) {
     let moves = player_legal_moves(board);
@@ -35,9 +39,10 @@ pub enum GameMode{
 }
 
 #[derive(PartialEq)]
+#[allow(dead_code)]
 pub enum Bot{
     Random,
-    Search,
+    Bard,
 }
 pub fn get_input() -> String{                                                                                                                                                                            
     print!("Enter your move: ");                                                                                                                                                                     
@@ -62,7 +67,7 @@ pub struct Game{
 }
 impl Game{
 
-    pub fn new(minlog: bool) -> Self{
+    pub fn _new(minlog: bool) -> Self{
         Game{ board: Bitboard::new(), mode: GameMode::Std, states: HashMap::new(),minlog,record: String::new(),counter: 0}
     }
    
@@ -191,9 +196,15 @@ pub fn play_game(&mut self) {
 pub fn bot_game(&mut self,white_type: Bot, black_type: Bot,shown: bool){
 
 
+    let white: Box<dyn GetMove> = match white_type {
+    Bot::Bard => Box::new(BardBot::new()),
+    Bot::Random => Box::new(RandomBot::new()),
+};
 
-   let white = RandomBot::new();
-   let black = RandomBot::new(); 
+let black: Box<dyn GetMove> = match black_type {
+    Bot::Bard => Box::new(BardBot::new()),
+    Bot::Random => Box::new(RandomBot::new()),
+};
    let mut players = [white,black]; 
    let mut from;
     let mut to;
@@ -238,7 +249,8 @@ pub fn bot_game(&mut self,white_type: Bot, black_type: Bot,shown: bool){
     }
 
     if self.minlog{ println!("{}", self.record);}
-    self.board.print_fen();
+    let fen = self.board.get_fen();
+    println!("{}",fen);
 
     
 }

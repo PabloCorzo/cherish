@@ -3,11 +3,13 @@ mod bitboard;
 mod render;
 mod game;
 mod bots;
+use dotenv::dotenv;
 
 use std::env;
 use crate::{bitboard::Bitboard, game::{Bot, Game, GameMode}};
 fn main(){
     
+    dotenv().ok();
     let args:Vec<String> = env::args().collect();
 
     
@@ -38,6 +40,6 @@ fn main(){
 
     else {
         println!("START!");
-        game.bot_game(Bot::Random,Bot::Random,shown); 
+        game.bot_game(Bot::Bard,Bot::Bard,shown); 
     }
 }

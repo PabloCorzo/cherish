@@ -1,5 +1,3 @@
-use std::fmt::format;
-
 use rand::seq::SliceRandom;
 
 fn move_bits(bitmap: u64, from: i32, to: i32) -> u64 {
@@ -383,7 +381,7 @@ pub fn new_from_fen(fen: &str) -> Self {
 
 
 
-    pub fn print_fen(&self){
+    pub fn get_fen(&self) -> String{
         //lowercase is black, uppercase is white
         //empty squares are numbers denoting empty len
         let mut buf = String::new();
@@ -438,9 +436,7 @@ pub fn new_from_fen(fen: &str) -> Self {
             _ => panic!("Invalid color"),
         };
         
-
-        buf.push_str(&format!(" {} - - ",player));
-
+        buf.push_str(&format!(" {} ",player));
         //castle rights 
         //order: KQkq
         let (white_king,black_king) = (self.wk.trailing_zeros() as i32, self.bk.trailing_zeros() as i32);
@@ -454,8 +450,8 @@ pub fn new_from_fen(fen: &str) -> Self {
             (r / 8 == black_king / 8) && r < &black_king
         });
 
-        if black_kside {buf.push('K'); space_flag = true;}
-        if black_qside {buf.push('Q'); space_flag = true;}
+        if black_kside {buf.push('K');space_flag=true;}//space flag
+        if black_qside {buf.push('Q');space_flag=true;}//space flag
         }
 
         if white_king_castle{
@@ -466,12 +462,11 @@ pub fn new_from_fen(fen: &str) -> Self {
             (r / 8 == white_king / 8) && r < &white_king
         
         });
-        if white_kside {buf.push('k'); space_flag = true;}
-        if white_qside {buf.push('q'); space_flag = true;}
+        if white_kside {buf.push('k');space_flag=true;}//space flag
+        if white_qside {buf.push('q');space_flag=true;}//space flag
         }
 
         if space_flag { buf.push(' ');} 
-        
         //en passant if there is
         if self.en_passant != -1 {
 
@@ -481,10 +476,11 @@ pub fn new_from_fen(fen: &str) -> Self {
             buf.push_str(&format!("{letter}{y} "));
         }
 
+        else{buf.push_str("- ");}
 
         //halfmoves and moves
-        buf.push_str(&format!("{} {}",self.counter,(self.counter/2)));
-        println!("{buf}");
+        buf.push_str(&format!("{} {}",self.counter,(self.counter/2) + 1));
+        buf
     }
 
 }

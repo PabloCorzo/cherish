@@ -1,4 +1,4 @@
-use crate::{bitboard::Bitboard, render::render};
+use crate::{bitboard::Bitboard};
 use std::{collections::HashMap};
 
 fn pawn_possible_moves(board: &Bitboard,piece: i32) -> Vec<i32>{
@@ -253,7 +253,6 @@ fn bishop_possible_moves(board: &Bitboard,piece: i32) -> Vec<i32>{
 } 
  
 fn queen_possible_moves(board: &Bitboard,piece: i32) -> Vec<i32>{
-    let c = board.to_move;
     let bm = bishop_possible_moves(board, piece);
     let rm = rook_possible_moves(board, piece);
     [rm,bm].into_iter().flatten().collect()
@@ -453,7 +452,7 @@ pub fn player_legal_moves(board: &Bitboard) -> HashMap<i32,Vec<i32>>{
 }
 
 //can check for each team by changing the turn for lookup then swapping it back to original state
-pub fn has_moves(board: &mut Bitboard,c: i32) -> bool{
+pub fn _has_moves(board: &mut Bitboard,c: i32) -> bool{
     if c.abs() != 1{panic!("Invalid color");}
     let prev_c = board.to_move;
     board.to_move = c;
