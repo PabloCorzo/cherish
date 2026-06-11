@@ -442,17 +442,6 @@ pub fn new_from_fen(fen: &str) -> Self {
         let (white_king,black_king) = (self.wk.trailing_zeros() as i32, self.bk.trailing_zeros() as i32);
         let (white_king_castle,black_king_castle) = (self.castle_rights.contains(&white_king),self.castle_rights.contains(&black_king));
         let mut space_flag = false;
-        if black_king_castle{
-        let black_kside = self.castle_rights.iter().any(|r| {
-            (r / 8 == black_king / 8) && r > &black_king
-        }); 
-        let black_qside = self.castle_rights.iter().any(|r| {
-            (r / 8 == black_king / 8) && r < &black_king
-        });
-
-        if black_kside {buf.push('K');space_flag=true;}//space flag
-        if black_qside {buf.push('Q');space_flag=true;}//space flag
-        }
 
         if white_king_castle{
         let white_kside = self.castle_rights.iter().any(|r| {
@@ -462,11 +451,27 @@ pub fn new_from_fen(fen: &str) -> Self {
             (r / 8 == white_king / 8) && r < &white_king
         
         });
-        if white_kside {buf.push('k');space_flag=true;}//space flag
-        if white_qside {buf.push('q');space_flag=true;}//space flag
+        if white_kside {buf.push('K');space_flag=true;}//space flag
+        if white_qside {buf.push('Q');space_flag=true;}//space flag
         }
 
+
+        if black_king_castle{
+        let black_kside = self.castle_rights.iter().any(|r| {
+            (r / 8 == black_king / 8) && r > &black_king
+        }); 
+        let black_qside = self.castle_rights.iter().any(|r| {
+            (r / 8 == black_king / 8) && r < &black_king
+        });
+
+        if black_kside {buf.push('k');space_flag=true;}//space flag
+        if black_qside {buf.push('q');space_flag=true;}//space flag
+        }
+
+
         if space_flag { buf.push(' ');} 
+        else {buf.push_str("- ");}
+
         //en passant if there is
         if self.en_passant != -1 {
 

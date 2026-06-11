@@ -32,4 +32,5 @@ impl GetMove for RandomBot{
     let piece = self.rng.random_range(1..=4);
     (*from,*to,piece)
 }
+
 }

@@ -10,6 +10,7 @@ use std::collections::HashMap;
 
 pub trait GetMove {
     fn get_move(&mut self, board: &Bitboard) -> (i32,i32,i32);
+    fn reset(&mut self)  {}
 }
 
 pub fn print_legal_moves(board: &Bitboard) {
@@ -38,7 +39,7 @@ pub enum GameMode{
     Speed,
 }
 
-#[derive(PartialEq)]
+#[derive(Clone,PartialEq)]
 #[allow(dead_code)]
 pub enum Bot{
     Random,
@@ -193,19 +194,9 @@ pub fn play_game(&mut self) {
 }
 
 
-pub fn bot_game(&mut self,white_type: Bot, black_type: Bot,shown: bool){
+pub fn bot_game(&mut self,white: &mut Box<dyn GetMove>, black: &mut Box<dyn GetMove>,shown: bool) -> i32{
 
-
-    let white: Box<dyn GetMove> = match white_type {
-    Bot::Bard => Box::new(BardBot::new()),
-    Bot::Random => Box::new(RandomBot::new()),
-};
-
-let black: Box<dyn GetMove> = match black_type {
-    Bot::Bard => Box::new(BardBot::new()),
-    Bot::Random => Box::new(RandomBot::new()),
-};
-   let mut players = [white,black]; 
+   let players = [white,black]; 
    let mut from;
     let mut to;
     let mut piece;
@@ -252,7 +243,8 @@ let black: Box<dyn GetMove> = match black_type {
     let fen = self.board.get_fen();
     println!("{}",fen);
 
-    
+ 
+    gamestate
 }
 
 fn log(&mut self, from:i32, to:i32,promoted_to: i32){
@@ -264,5 +256,59 @@ fn log(&mut self, from:i32, to:i32,promoted_to: i32){
 
     }
 }
+
+
+    pub fn play_head_to_head(&mut self,bot1: Bot,bot2: Bot) -> (i32,i32) {
+    
+    let mut tracker = (0,0);
+
+        let mut p1: Box<dyn GetMove> = match bot1{
+        Bot::Bard => Box::new(BardBot::new(false)),
+        Bot::Random => Box::new(RandomBot::new()),
+    };
+    
+    let mut p2: Box<dyn GetMove> = match bot2{
+        Bot::Bard => Box::new(BardBot::new(false)),
+        Bot::Random => Box::new(RandomBot::new()),
+    };
+
+    p1.reset();
+    p2.reset();
+
+    match self.bot_game(&mut p1, &mut p2, false){
+        1 => tracker.0 += 1,
+        -1 => tracker.1 +=1,
+        2 => {},
+        _ => panic!("Bot game returned invalid gamestate"),
+    }
+
+    p1.reset();
+    p2.reset();
+    // println!("FIRST MATCH DONE");
+    self.board = Bitboard::new();
+    self.states.clear();
+    match self.bot_game(&mut p2, &mut p1, false){
+        1 => tracker.1 += 1,
+        -1 => tracker.0 +=1,
+        2 => {},
+        _ => panic!("Bot game returned invalid gamestate"),
+    }
+
+    // println!("Result is: {:?}", tracker);
+
+    tracker
+}
+    pub fn play_n_matches(&mut self,n: i32,bot1: Bot,bot2: Bot) -> (i32,i32){
+
+        let mut result = (0,0);
+        for _ in 0..n{
+                let new_res = self.play_head_to_head(bot1.clone(), bot2.clone());
+                result.0 += new_res.0;
+                result.1 += new_res.1;
+                self.states.clear();
+                self.board = Bitboard::new();
+        }
+        result
+    }
 }
 

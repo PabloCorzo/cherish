@@ -1,5 +1,8 @@
-BUG: 1B2R3/3k4/2PP4/8/1N2Prp1/2R1Q1bp/3K4/r4qN1 w - - 0 1
-image shows the bug: its apparent checkmate
+BARDBOT:
+  move evaluation tool:
+    -find a way to generate random positions and have them correctly evaluated
+    -linear regressor to predict move eval
+    -record api opening calls to local map for offline storage
 
 960 castle breaks if rook and king start next to each other -> not a priority
 

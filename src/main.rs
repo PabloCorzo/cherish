@@ -17,8 +17,16 @@ fn main(){
     let speed: bool = args.iter().any(|arg| arg == "-speed");
     let minlog: bool = args.iter().any(|arg| arg == "-minlog");
     let human: bool = args.iter().any(|arg| arg == "-h");
-    let shown: bool = args.iter().any(|arg| arg == "-s");
+    let _shown: bool = args.iter().any(|arg| arg == "-s");
     let debug: bool = args.iter().any(|arg| arg == "-debug");
+
+    let mut n: Option<i32>;
+    if let Some(pos) = args.iter().position(|a| a == "-n") {
+        if let Some(value) = args.get(pos + 1) {
+            n = Some(value.parse().expect("Expected a number after -n"));
+        }else { n = None; }
+    }else { n = None; }
+
 
 
     let mut gamemode = GameMode::Std;
@@ -39,7 +47,12 @@ fn main(){
     if human{ game.play_game(); }
 
     else {
+
         println!("START!");
-        game.bot_game(Bot::Bard,Bot::Bard,shown); 
+        let result = match n{
+            Some(num) => game.play_n_matches(num, Bot::Bard, Bot::Bard),
+            None => game.play_head_to_head(Bot::Bard, Bot::Bard),
+        };
+        println!("Result: {:?}",result);
     }
 }
