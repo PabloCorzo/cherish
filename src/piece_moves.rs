@@ -444,9 +444,6 @@ pub fn player_legal_moves(board: &Bitboard) -> HashMap<i32,Vec<i32>>{
         legals.insert(from,piece_legals);
     }
 
-    for (p,moves) in legals.iter(){
-        if p == &48 {println!("KING LEGALS: {:?}",moves);}
-    }
     legals
 
 }
