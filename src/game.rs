@@ -258,7 +258,7 @@ fn log(&mut self, from:i32, to:i32,promoted_to: i32){
 }
 
 
-    pub fn play_head_to_head(&mut self,p1: &mut Box<dyn GetMove>,p2: &mut Box<dyn GetMove>) -> (i32,i32) {
+    pub fn play_head_to_head(&mut self,p1: &mut Box<dyn GetMove>,p2: &mut Box<dyn GetMove>,show: bool) -> (i32,i32) {
     
     let mut tracker = (0,0);
 
@@ -266,7 +266,7 @@ fn log(&mut self, from:i32, to:i32,promoted_to: i32){
     p1.reset();
     p2.reset();
 
-    match self.bot_game(p1, p2, false){
+    match self.bot_game(p1, p2, show){
         1 => tracker.0 += 1,
         -1 => tracker.1 +=1,
         2 => {},
@@ -289,7 +289,7 @@ fn log(&mut self, from:i32, to:i32,promoted_to: i32){
 
     tracker
 }
-    pub fn play_n_matches(&mut self,n: i32,bot1: Bot,bot2: Bot,learn: bool) -> (i32,i32){
+    pub fn play_n_matches(&mut self,n: i32,bot1: Bot,bot2: Bot,learn: bool,shown: bool) -> (i32,i32){
 
         let mut p1: Box<dyn GetMove> = match bot1{
         Bot::Bard => Box::new(BardBot::new(learn)),
@@ -303,8 +303,10 @@ fn log(&mut self, from:i32, to:i32,promoted_to: i32){
     };
 
         let mut result = (0,0);
-        for _ in 0..n{
-                let new_res = self.play_head_to_head(&mut p1,&mut p2);
+        for i in 0..n{
+                let s: bool;
+                if i == 0 && shown{s = true;} else {s = false;}
+                let new_res = self.play_head_to_head(&mut p1,&mut p2,s);
                 result.0 += new_res.0;
                 result.1 += new_res.1;
                 self.states.clear();

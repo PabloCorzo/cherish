@@ -18,7 +18,7 @@ fn main(){
     
     let minlog: bool = args.iter().any(|arg| arg == "-minlog");
     let human: bool = args.iter().any(|arg| arg == "-h");
-    let _shown: bool = args.iter().any(|arg| arg == "-s");
+    let shown: bool = args.iter().any(|arg| arg == "-s");
     let learn: bool = args.iter().any(|arg| arg == "-learn");
 
 
@@ -48,8 +48,8 @@ fn main(){
         
         println!("START!");
         let result = match n{
-            Some(num) => game.play_n_matches(num, Bot::Bard, Bot::Bard,learn),
-            None => game.play_n_matches(1,Bot::Bard, Bot::Bard,false),
+            Some(num) => game.play_n_matches(num, Bot::Bard, Bot::Bard,learn,false),
+            None => game.play_n_matches(1,Bot::Bard, Bot::Bard,false,shown),
         };
         println!("Result: {:?}",result);
     }

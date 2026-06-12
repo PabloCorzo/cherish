@@ -64,44 +64,61 @@ impl BardBot{
        let json: serde_json::Value = serde_json::from_str(&text).unwrap_or_else(|e| {
            panic!("Failed to parse JSON: {}\nBody was: {}\n\nfen was: {}", e, text,fen);
        });
-         
+       println!("Called API");  
         let moves = json["moves"].as_array().unwrap();
-        let total_weight: u64 = moves.iter()
-        .map(|m| m["white"].as_u64().unwrap() + m["draws"].as_u64().unwrap())
-        .sum();
+        let exponent = 2.0; // higher = stronger bias toward best-scoring moves
 
-
-        if total_weight == 0 {
-           return None; // empty book, engine takes over
-        }
-        let mut pick = rand::random::<u64>() % total_weight;
-
-        for m in moves {
-            let w = m["white"].as_u64().unwrap() + m["draws"].as_u64().unwrap();
-            if pick < w {
-                
-                if self.memorize{
-                    let arr_key:[u64;12] = [board.wp,board.wr,board.wn,board.wb,board.wq,board.wk,board.bp,board.br,board.bn,board.bb,board.bq,board.bk];   
-                    let move_val = self.parse_move(m["uci"].as_str().unwrap().to_string());
-                    let book_lookup = self.opening_book.book.get_mut(&arr_key);
-                    match book_lookup{
-                    Some(v) => {
-                        if !v.contains(&move_val){
-                            self.opening_book.book.get_mut(&arr_key).unwrap().push(move_val);
-                        }
-                    },
-                    None => {
-                        let mut v = Vec::new();
-                        v.push(move_val);
-                        self.opening_book.book.insert(arr_key,v);
-                    },
-                  }
-                }
-
-                return Some(m["uci"].as_str().unwrap().to_string());
-            }
-            pick -= w;
-        }
+     let weights: Vec<f64> = moves.iter()
+         .map(|m| {
+             let white = m["white"].as_u64().unwrap() as f64;
+             let draws = m["draws"].as_u64().unwrap() as f64;
+             let black = m["black"].as_u64().unwrap() as f64;
+             let total = white + draws + black;
+             if total == 0.0 {
+                 0.0
+             } else {
+                 let side_score = if board.to_move == 1 {
+                     white + draws * 0.5
+                 } else {
+                     black + draws * 0.5
+                 };
+                 let score_rate = side_score / total;
+                 total.sqrt() * score_rate.powf(exponent)
+             }
+         })
+         .collect();
+     
+     let total_weight: f64 = weights.iter().sum();
+     if total_weight <= 0.0 {
+         return None; // empty book, engine takes over
+     }
+     
+     let mut pick = rand::random::<f64>() * total_weight;
+     
+     for (m, &w) in moves.iter().zip(weights.iter()) {
+         if pick < w {
+     
+             if self.memorize {
+                 let arr_key: [u64; 12] = [board.wp, board.wr, board.wn, board.wb, board.wq, board.wk, board.bp, board.br, board.bn, board.bb, board.bq, board.bk];
+                 let move_val = self.parse_move(m["uci"].as_str().unwrap().to_string());
+                 let book_lookup = self.opening_book.book.get_mut(&arr_key);
+                 match book_lookup {
+                     Some(v) => {
+                         if !v.contains(&move_val) {
+                             self.opening_book.book.get_mut(&arr_key).unwrap().push(move_val);
+                         }
+                     },
+                     None => {
+                         let mut v = Vec::new();
+                         v.push(move_val);
+                         self.opening_book.book.insert(arr_key, v);
+                     },
+                 }
+             }
+             return Some(m["uci"].as_str().unwrap().to_string());
+         }
+         pick -= w;
+     }
 
         None
     }

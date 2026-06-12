@@ -21,9 +21,9 @@ impl OpeningBook{
     }
 
     // File doesn't exist yet, start with empty book
-    // OpeningBook { book: HashMap::new() }
+    OpeningBook { book: HashMap::new() }
     //panic so it does not create a new one in case it overwrites current one
-    panic!("Could not load opening_book.bin");
+    // panic!("Could not load opening_book.bin");
     }
 
 }
