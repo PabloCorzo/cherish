@@ -8,7 +8,7 @@ use std::io::Write;
 use std::collections::HashMap;
 
 
-pub trait GetMove {
+pub trait GetMove: std::any::Any{
     fn get_move(&mut self, board: &Bitboard) -> (i32,i32,i32);
     fn reset(&mut self)  {}
 }
@@ -68,11 +68,11 @@ pub struct Game{
 }
 impl Game{
 
-    pub fn _new(minlog: bool) -> Self{
+    pub fn new(minlog: bool) -> Self{
         Game{ board: Bitboard::new(), mode: GameMode::Std, states: HashMap::new(),minlog,record: String::new(),counter: 0}
     }
    
-    pub fn new_preloaded(board: Bitboard, minlog: bool) -> Self{
+    pub fn _new_preloaded(board: Bitboard, minlog: bool) -> Self{
         Game{ board, mode: GameMode::Std, states: HashMap::new(),minlog,record: String::new(),counter: 0}
     }
     pub fn new_alt(gamemode: GameMode,minlog: bool) -> Self{
@@ -258,24 +258,15 @@ fn log(&mut self, from:i32, to:i32,promoted_to: i32){
 }
 
 
-    pub fn play_head_to_head(&mut self,bot1: Bot,bot2: Bot) -> (i32,i32) {
+    pub fn play_head_to_head(&mut self,p1: &mut Box<dyn GetMove>,p2: &mut Box<dyn GetMove>) -> (i32,i32) {
     
     let mut tracker = (0,0);
 
-        let mut p1: Box<dyn GetMove> = match bot1{
-        Bot::Bard => Box::new(BardBot::new(false)),
-        Bot::Random => Box::new(RandomBot::new()),
-    };
-    
-    let mut p2: Box<dyn GetMove> = match bot2{
-        Bot::Bard => Box::new(BardBot::new(false)),
-        Bot::Random => Box::new(RandomBot::new()),
-    };
 
     p1.reset();
     p2.reset();
 
-    match self.bot_game(&mut p1, &mut p2, false){
+    match self.bot_game(p1, p2, false){
         1 => tracker.0 += 1,
         -1 => tracker.1 +=1,
         2 => {},
@@ -287,7 +278,7 @@ fn log(&mut self, from:i32, to:i32,promoted_to: i32){
     // println!("FIRST MATCH DONE");
     self.board = Bitboard::new();
     self.states.clear();
-    match self.bot_game(&mut p2, &mut p1, false){
+    match self.bot_game(p2, p1, false){
         1 => tracker.1 += 1,
         -1 => tracker.0 +=1,
         2 => {},
@@ -298,17 +289,34 @@ fn log(&mut self, from:i32, to:i32,promoted_to: i32){
 
     tracker
 }
-    pub fn play_n_matches(&mut self,n: i32,bot1: Bot,bot2: Bot) -> (i32,i32){
+    pub fn play_n_matches(&mut self,n: i32,bot1: Bot,bot2: Bot,learn: bool) -> (i32,i32){
+
+        let mut p1: Box<dyn GetMove> = match bot1{
+        Bot::Bard => Box::new(BardBot::new(learn)),
+        Bot::Random => Box::new(RandomBot::new()),
+       };
+
+               
+    let mut p2: Box<dyn GetMove> = match bot2{
+        Bot::Bard => Box::new(BardBot::new(false)),
+        Bot::Random => Box::new(RandomBot::new()),
+    };
 
         let mut result = (0,0);
         for _ in 0..n{
-                let new_res = self.play_head_to_head(bot1.clone(), bot2.clone());
+                let new_res = self.play_head_to_head(&mut p1,&mut p2);
                 result.0 += new_res.0;
                 result.1 += new_res.1;
                 self.states.clear();
                 self.board = Bitboard::new();
         }
-        result
+
+    // if let Some(s) = (p1.as_ref() as &dyn std::any::Any).downcast_ref::<BardBot>() { 
+    //     println!("{:?}", s.opening_book.book.len());
+    //     s.opening_book.book.iter()
+    //         .for_each(|(_k,v)| {println!("{}",v.len());});
+    // }
+    result
+
     }
 }
-

@@ -9,7 +9,7 @@ use reqwest;
 
 pub struct BardBot{
     opening_depth: i32,
-    opening_book: OpeningBook,
+    pub opening_book: OpeningBook,
     opening_flag: bool,
     memorize: bool
 }
@@ -70,6 +70,25 @@ impl BardBot{
         for m in moves {
             let w = m["white"].as_u64().unwrap() + m["draws"].as_u64().unwrap();
             if pick < w {
+                
+                if self.memorize{
+                    let arr_key:[u64;12] = [board.wp,board.wr,board.wn,board.wb,board.wq,board.wk,board.bp,board.br,board.bn,board.bb,board.bq,board.bk];   
+                    let move_val = self.parse_move(m["uci"].as_str().unwrap().to_string());
+                    let book_lookup = self.opening_book.book.get_mut(&arr_key);
+                    match book_lookup{
+                    Some(v) => {
+                        if !v.contains(&move_val){
+                            self.opening_book.book.get_mut(&arr_key).unwrap().push(move_val);
+                        }
+                    },
+                    None => {
+                        let mut v = Vec::new();
+                        v.push(move_val);
+                        self.opening_book.book.insert(arr_key,v);
+                    },
+                  }
+                }
+
                 return Some(m["uci"].as_str().unwrap().to_string());
             }
             pick -= w;
@@ -78,7 +97,7 @@ impl BardBot{
         None
     }
 
-    fn parse_move(&mut self,m: String) -> (i32,i32,i32) {
+    fn parse_move(&self,m: String) -> (i32,i32,i32) {
         
 
         // println!("PARSING: {m}");

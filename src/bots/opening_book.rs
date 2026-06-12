@@ -2,10 +2,10 @@ use std::collections::HashMap;
 use bincode;
 use serde::{Serialize, Deserialize};
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize,Debug)]
 pub struct OpeningBook{
 
-    book: HashMap<[i32;12],Vec<(i32,i32)>>,
+    pub book: HashMap<[u64;12],Vec<(i32,i32,i32)>>,
 }
 
 impl OpeningBook{
@@ -14,13 +14,17 @@ impl OpeningBook{
     pub fn new() -> Self {
     if let Ok(bytes) = std::fs::read("opening_book.bin") {
         if let Ok(book) = bincode::deserialize(&bytes) {
+            // println!("I COULD SERIALIZE YIPPEEEEE: \n {:?}",book);
+            
             return OpeningBook { book };
         }
     }
 
     // File doesn't exist yet, start with empty book
-    OpeningBook { book: HashMap::new() }
-}
+    // OpeningBook { book: HashMap::new() }
+    //panic so it does not create a new one in case it overwrites current one
+    panic!("Could not load opening_book.bin");
+    }
 
 }
 
