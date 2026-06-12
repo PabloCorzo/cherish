@@ -4,14 +4,19 @@ use crate::piece_moves::player_legal_moves;
 use crate::bots::randombot::{RandomBot};
 use crate::game::GetMove;
 
+use rand::rngs::StdRng;
+use rand::seq::IteratorRandom;
 use serde_json;
 use reqwest;
+use rand::{SeedableRng};
 
 pub struct BardBot{
     opening_depth: i32,
     pub opening_book: OpeningBook,
     opening_flag: bool,
-    memorize: bool
+    chooser:StdRng,
+    memorize: bool,
+    search_depth: i32,
 }
 
 impl BardBot{
@@ -19,8 +24,10 @@ impl BardBot{
     pub fn new(memorize:bool) -> Self{
         BardBot {  
             opening_depth: 10,
+            search_depth: 5,
             opening_flag: true,
-            memorize, 
+            memorize,
+            chooser: StdRng::from_rng(&mut rand::rng()),
             opening_book: OpeningBook::new(),
         }
     }
@@ -31,7 +38,9 @@ impl BardBot{
             opening_depth,
             opening_book: OpeningBook::new(),
             opening_flag: true,
+            search_depth: 5,
             memorize: false,
+            chooser: StdRng::from_rng(&mut rand::rng()),
         }   
     }
 
@@ -129,12 +138,35 @@ impl BardBot{
     }
     
 
+
+    fn move_lookahead(&self, board: &Bitboard, n: i32) -> (i32,i32,i32){
+        
+
+        let _legals = player_legal_moves(board);
+        //minmax search recursively until n is 0
+        RandomBot::new().get_move(board)
+    }
 } 
   
 impl GetMove for BardBot{
   
    fn get_move(&mut self,board: &Bitboard) -> (i32,i32,i32){
+
+
+        if !self.memorize{
+            
+            let arr_key:[u64;12] = [board.wp,board.wr,board.wn,board.wb,board.wq,board.wk,board.bp,board.br,board.bn,board.bb,board.bq,board.bk];   
+            let book_lookup = self.opening_book.book.get_mut(&arr_key);
+            
+            match book_lookup{
+                Some(move_list) => return *move_list.iter().choose(&mut self.chooser).unwrap(), 
+                None => return self.move_lookahead(board, self.search_depth),
+            }
+        }
         
+
+    // SECTION FOR LEARNING OPENINGS THROUGH API CALLS
+
        if self.opening_flag { 
            let memory = self.remember_opening(board);
 

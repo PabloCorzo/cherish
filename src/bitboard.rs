@@ -72,7 +72,7 @@ impl Bitboard{
     }    
 
 
-pub fn new_from_fen(fen: &str) -> Self {
+pub fn _new_from_fen(fen: &str) -> Self {
     let parts: Vec<&str> = fen.split_whitespace().collect();
     assert!(parts.len() >= 2, "FEN must have at least piece and side-to-move fields");
 
