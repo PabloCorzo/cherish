@@ -5,7 +5,7 @@ use serde::{Serialize, Deserialize};
 #[derive(Serialize, Deserialize,Debug)]
 pub struct OpeningBook{
 
-    pub book: HashMap<[u64;12],Vec<(i32,i32,i32)>>,
+    pub book: HashMap<[u64;12],Vec<(i32,i32,i32,i32)>>,
 }
 
 impl OpeningBook{

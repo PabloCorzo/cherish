@@ -291,14 +291,16 @@ fn log(&mut self, from:i32, to:i32,promoted_to: i32){
 }
     pub fn play_n_matches(&mut self,n: i32,bot1: Bot,bot2: Bot,learn: bool,shown: bool) -> (i32,i32){
 
+        println!("LEARN IS {learn}");
         let mut p1: Box<dyn GetMove> = match bot1{
-        Bot::Bard => Box::new(BardBot::new(learn)),
+        Bot::Bard => Box::new(BardBot::new(learn,!learn)),
         Bot::Random => Box::new(RandomBot::new()),
        };
 
                
+
     let mut p2: Box<dyn GetMove> = match bot2{
-        Bot::Bard => Box::new(BardBot::new(false)),
+        Bot::Bard => Box::new(BardBot::new(learn,!learn)),
         Bot::Random => Box::new(RandomBot::new()),
     };
 
