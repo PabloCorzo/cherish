@@ -6,6 +6,10 @@ use crate::game::GetMove;
 
 use rand::rngs::StdRng;
 use rand::seq::IteratorRandom;
+
+use rand::seq::SliceRandom;
+use rand::prelude::IndexedRandom;
+
 use serde_json;
 use reqwest;
 use rand::{SeedableRng};
@@ -123,7 +127,7 @@ impl BardBot{
                 let entry = self.opening_book.book.entry(arr_key).or_insert_with(Vec::new);
                 match entry.iter_mut().find(|v| v.0 == from && v.1 == to && v.2 == promo) {
                     Some(v) => v.3 += 1,
-                    None => entry.push((from, to, promo, 0)),
+                    None => entry.push((from, to, promo, 1)),
                 }
             }
 
@@ -153,9 +157,9 @@ impl BardBot{
             Some(c) => {
                 match c {
                   'q' => 1,  
-                  'r' => 1,  
-                  'n' => 1,  
-                  'b' => 1,
+                  'r' => 2,  
+                  'n' => 3,  
+                  'b' => 4,
                   _ => panic!("API returned invalid promotion {c}"),
                 }
             }
@@ -184,7 +188,7 @@ impl GetMove for BardBot{
   
    fn get_move(&mut self,board: &Bitboard) -> (i32,i32,i32){
 
-
+        //remember move from locally stored memory if not on train mode
         if !self.memorize && self.from_memory{
             
             let arr_key:[u64;12] = [board.wp,board.wr,board.wn,board.wb,board.wq,board.wk,board.bp,board.br,board.bn,board.bb,board.bq,board.bk];   
@@ -193,7 +197,7 @@ impl GetMove for BardBot{
             match book_lookup{
                 Some(move_list) => {
                     println!("{:?}",move_list);
-                    let move_tup = *move_list.iter().choose(&mut self.chooser).unwrap();
+                    let move_tup = *move_list.choose_weighted(&mut self.chooser, |item| item.3).unwrap();
                     return (move_tup.0,move_tup.1,move_tup.2)
                 }, 
                 None => return self.move_lookahead(board, self.search_depth),
