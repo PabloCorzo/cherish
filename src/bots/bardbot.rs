@@ -5,11 +5,12 @@ use crate::bots::randombot::{RandomBot};
 use crate::game::GetMove;
 
 use rand::rngs::StdRng;
-use rand::seq::IteratorRandom;
-
-use rand::seq::SliceRandom;
+// use rand::seq::IteratorRandom;
+use std::thread;
+// use rand::seq::SliceRandom;
 use rand::prelude::IndexedRandom;
 
+use std::time::{Duration, Instant};
 use serde_json;
 use reqwest;
 use rand::{SeedableRng};
@@ -22,6 +23,8 @@ pub struct BardBot{
     memorize: bool,
     search_depth: i32,
     from_memory: bool,
+    last_api_call: Option<Instant>, 
+    api_rate_limit_s: u64, 
 }
 
 impl BardBot{
@@ -36,6 +39,8 @@ impl BardBot{
             chooser: StdRng::from_rng(&mut rand::rng()),
             opening_book: OpeningBook::new(),
             from_memory,
+            last_api_call: None,
+            api_rate_limit_s: 10,
         }
     }
 
@@ -49,6 +54,9 @@ impl BardBot{
             memorize: false,
             from_memory: false,
             chooser: StdRng::from_rng(&mut rand::rng()),
+            last_api_call: None,
+            api_rate_limit_s: 10,
+            
         }   
     }
 
@@ -179,14 +187,12 @@ impl BardBot{
 
         let _legals = player_legal_moves(board);
         //minmax search recursively until n is 0
-        println!("Choosing at random");
+        if self.memorize { println!("Choosing at random"); }
         RandomBot::new().get_move(board)
     }
-} 
-  
-impl GetMove for BardBot{
-  
-   fn get_move(&mut self,board: &Bitboard) -> (i32,i32,i32){
+
+
+       fn get_move_opt(&mut self,board: &Bitboard) -> Option<(i32,i32,i32)>{
 
         //remember move from locally stored memory if not on train mode
         if !self.memorize && self.from_memory{
@@ -196,37 +202,117 @@ impl GetMove for BardBot{
             
             match book_lookup{
                 Some(move_list) => {
-                    println!("{:?}",move_list);
+                    // println!("{:?}",move_list);
                     let move_tup = *move_list.choose_weighted(&mut self.chooser, |item| item.3).unwrap();
-                    return (move_tup.0,move_tup.1,move_tup.2)
+                    return Some((move_tup.0,move_tup.1,move_tup.2))
                 }, 
-                None => return self.move_lookahead(board, self.search_depth),
+                None => return Some(self.move_lookahead(board, self.search_depth)),
             }
         }
         
 
     // SECTION FOR LEARNING OPENINGS THROUGH API CALLS
 
-       if self.opening_flag { 
+       if self.opening_flag {
+
+           // Rate limit: skip API call if too soon since last one
+        let now = Instant::now();
+        let ready = match self.last_api_call {
+            Some(last) => now.duration_since(last) >= Duration::from_millis(self.api_rate_limit_s * 1000),
+            None => true,
+        };
+
+           if ready {
+           self.last_api_call = Some(now);
            let memory = self.remember_opening(board);
-
-            // println!("Memory remembered: {:?}",memory);
-
+           // println!("Memory remembered: {:?}",memory);
            match memory{
                 Some(m) => {
                     self.opening_depth -= 1; 
                     if self.opening_depth <= 0 {self.opening_flag = false;}
-                    return self.parse_move(m);
+                    return Some(self.parse_move(m));
                 },
                 None => {self.opening_flag = false;},
                 // None => {self.opening_depth = 0},
            }
        }
+           else{
+                return None;
+           }
+       }
   
        //fallback until it actually searches
-       RandomBot::new().get_move(board) 
+       Some(RandomBot::new().get_move(board)) 
    }
 
+} 
+  
+impl GetMove for BardBot{
+  
+   fn get_move(&mut self,board: &Bitboard) -> (i32,i32,i32){
+       let mut n = 15; 
+       while n > 0{
+           match self.get_move_opt(board){
+                Some(mv) => return mv,
+                None => thread::sleep(Duration::new(self.api_rate_limit_s,0)),
+           }
+           n = n - 1;
+        }
+       panic!("Request timeout");
+    }
+   //     fn get_move_opt(&mut self,board: &Bitboard) -> Option<(i32,i32,i32)>{
+   //
+   //      //remember move from locally stored memory if not on train mode
+   //      if !self.memorize && self.from_memory{
+   //
+   //          let arr_key:[u64;12] = [board.wp,board.wr,board.wn,board.wb,board.wq,board.wk,board.bp,board.br,board.bn,board.bb,board.bq,board.bk];   
+   //          let book_lookup = self.opening_book.book.get_mut(&arr_key);
+   //
+   //          match book_lookup{
+   //              Some(move_list) => {
+   //                  // println!("{:?}",move_list);
+   //                  let move_tup = *move_list.choose_weighted(&mut self.chooser, |item| item.3).unwrap();
+   //                  return (move_tup.0,move_tup.1,move_tup.2)
+   //              }, 
+   //              None => return self.move_lookahead(board, self.search_depth),
+   //          }
+   //      }
+   //
+   //
+   //  // SECTION FOR LEARNING OPENINGS THROUGH API CALLS
+   //
+   //     if self.opening_flag {
+   //
+   //         // Rate limit: skip API call if too soon since last one
+   //      let now = Instant::now();
+   //      let ready = match self.last_api_call {
+   //          Some(last) => now.duration_since(last) >= Duration::from_millis(self.api_rate_limit_ms),
+   //          None => true,
+   //      };
+   //
+   //         if ready {
+   //         self.last_api_call = Some(now);
+   //         let memory = self.remember_opening(board);
+   //         // println!("Memory remembered: {:?}",memory);
+   //         match memory{
+   //              Some(m) => {
+   //                  self.opening_depth -= 1; 
+   //                  if self.opening_depth <= 0 {self.opening_flag = false;}
+   //                  return Some(self.parse_move(m));
+   //              },
+   //              None => {self.opening_flag = false;},
+   //              // None => {self.opening_depth = 0},
+   //         }
+   //     }
+   //         else{
+   //              return None;
+   //         }
+   //     }
+   //
+   //     //fallback until it actually searches
+   //     Some(RandomBot::new().get_move(board)) 
+   // }
+   //
     fn reset(&mut self) {
         self.opening_flag = true;
         self.opening_depth = 10;

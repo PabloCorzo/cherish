@@ -7,6 +7,21 @@ use dotenv::dotenv;
 
 use std::env;
 use crate::{game::{Bot, Game, GameMode}};
+
+//CARGO RUN -- -960 -> chess960 
+
+//CARGO RUN -- -speed -> capture gives you turn again
+
+//CARGO RUN -- -minlog -> log the games' moves
+
+//CARGO RUN -- -h -> human players
+
+//CARGO RUN -- -s -> show all board states as game progresses, for bot games
+
+//ignore if human
+//CARGO RUN -- -learn -> bots will call lichess API for opening book creation/appendage,
+
+//CARGO RUN -- -n [num] to play num head to heads, only for bot games
 fn main(){
     
     dotenv().ok();
@@ -29,21 +44,24 @@ fn main(){
         }else { n = None; }
     }else { n = None; }
 
-
-
+    
+    //default params or set otherwise
     let mut gamemode = GameMode::Std;
     if n60{gamemode = GameMode::N60;}
     else if speed {gamemode = GameMode::Speed;}
 
+    // create game object
     let mut game = match gamemode{
         GameMode::Speed => Game::new_alt(GameMode::Speed,minlog),
         GameMode::N60 => Game::new_alt(GameMode::N60,minlog),
         // GameMode::Std => Game::new_preloaded(b,minlog),
         GameMode::Std => Game::new(minlog),
     };
-    
-    if human{ game.play_game(); }
+   
 
+    if human{ game.play_game(); }
+    
+    // training loop or play head to heads between bots
     else {
         
         println!("START!");

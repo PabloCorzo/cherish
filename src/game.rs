@@ -154,7 +154,7 @@ pub fn play_game(&mut self) {
         // println!("Gamestate is: {gamestate}");
         if gamestate != 0 { break; }
 
-        print_legal_moves(&self.board);
+        // print_legal_moves(&self.board);
         loop {
             render(&self.board);
             let input = get_input();
@@ -291,7 +291,7 @@ fn log(&mut self, from:i32, to:i32,promoted_to: i32){
 }
     pub fn play_n_matches(&mut self,n: i32,bot1: Bot,bot2: Bot,learn: bool,shown: bool) -> (i32,i32){
 
-        println!("LEARN IS {learn}");
+        // println!("LEARN IS {learn}");
         let mut p1: Box<dyn GetMove> = match bot1{
         Bot::Bard => Box::new(BardBot::new(learn,!learn)),
         Bot::Random => Box::new(RandomBot::new()),
@@ -309,6 +309,7 @@ fn log(&mut self, from:i32, to:i32,promoted_to: i32){
                 let s: bool;
                 if i == 0 && shown{s = true;} else {s = false;}
                 let new_res = self.play_head_to_head(&mut p1,&mut p2,s);
+                println!("Match {} done.",i);
                 result.0 += new_res.0;
                 result.1 += new_res.1;
                 self.states.clear();

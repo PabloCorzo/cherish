@@ -1,8 +1,12 @@
 BARDBOT:
   move evaluation tool:
     -find a way to generate random positions and have them correctly evaluated
+    |-> Better to use a public DB
     -linear regressor to predict move eval
+    |-> NNUE style Neural network could be more interesting for bitboards
+
     -record api opening calls to local map for offline storage
+    |-> Done, needs either way more entries, more restrictive selection or both
 
 960 castle breaks if rook and king start next to each other -> not a priority
 
