@@ -5,7 +5,7 @@ mod game;
 mod bots;
 use dotenv::dotenv;
 
-use std::env;
+use std::{env, process::exit};
 use crate::{game::{Bot, Game, GameMode}};
 
 //CARGO RUN -- -960 -> chess960 
@@ -30,7 +30,15 @@ fn main(){
     
     let n60: bool = args.iter().any(|arg| arg == "-960");
     let speed: bool = args.iter().any(|arg| arg == "-speed");
-    
+
+    let eval_mode: bool = args.iter().any(|arg| arg == "-eval");
+    if eval_mode{
+        println!("Running eval mode");
+        let _ = bots::eval_model::train_model();
+        println!("Eval mode finished");
+        exit(0)
+    }
+
     let minlog: bool = args.iter().any(|arg| arg == "-minlog");
     let human: bool = args.iter().any(|arg| arg == "-h");
     let shown: bool = args.iter().any(|arg| arg == "-s");
