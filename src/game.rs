@@ -1,8 +1,12 @@
+use candle_core::Device;
+use candle_nn::{Sequential, VarMap};
+
 use crate::piece_moves::{board_state, is_capture, is_promotion, player_legal_moves,move_to_notation};
 use crate::bitboard::{Bitboard,letter_to_x};
 use crate::render::render; 
-use crate::bots::randombot::RandomBot;
 use crate::bots::bardbot::BardBot;
+use crate::bots::eval_model::{load_model,predict};
+use crate::bots::randombot::RandomBot;
 use std::io;
 use std::io::Write;
 use std::collections::HashMap;
@@ -58,31 +62,88 @@ pub fn get_input() -> String{
   }            
 
 
-pub struct Game{
+
+pub struct Game {
     board: Bitboard,
     mode: GameMode,
-    states: HashMap<[u64;12],i32>,
+    states: HashMap<[u64; 12], i32>,
     minlog: bool,
     record: String,
     counter: u32,
+
+    // NNUE evaluator
+    varmap: VarMap,
+    model: Sequential,
+    device: Device,
+    k: f32,
 }
+
+
 impl Game{
 
-    pub fn new(minlog: bool) -> Self{
-        Game{ board: Bitboard::new(), mode: GameMode::Std, states: HashMap::new(),minlog,record: String::new(),counter: 0}
+    // pub fn new(minlog: bool) -> Self{
+    //     Game{ board: Bitboard::new(), mode: GameMode::Std, states: HashMap::new(),minlog,record: String::new(),counter: 0}
+    // }
+  
+    pub fn new(minlog: bool) -> Self {
+        let device = Device::Cpu;
+        let (varmap, model) = load_model(&device, "nnue_weights.safetensors");
+
+        Self{
+            board: Bitboard::new(),
+            mode: GameMode::Std,
+            states: HashMap::new(),
+            minlog,
+            record: String::new(),
+            counter: 0,
+            varmap,
+            model,
+            device,
+            k: 400.0,
+        }
     }
-   
-    pub fn _new_preloaded(board: Bitboard, minlog: bool) -> Self{
-        Game{ board, mode: GameMode::Std, states: HashMap::new(),minlog,record: String::new(),counter: 0}
+
+
+    pub fn new_preloaded(board: Bitboard,minlog: bool) -> Self {
+        let device = Device::Cpu;
+        let (varmap, model) = load_model(&device, "nnue_weights.safetensors");
+
+        Self{
+            board,
+            mode: GameMode::Std,
+            states: HashMap::new(),
+            minlog,
+            record: String::new(),
+            counter: 0,
+            varmap,
+            model,
+            device,
+            k: 400.0,
+        }
     }
+
     pub fn new_alt(gamemode: GameMode,minlog: bool) -> Self{
-        
+        let device = Device::Cpu;
+        let (varmap, model) = load_model(&device, "nnue_weights.safetensors");
+
         let board = match gamemode{
             GameMode::N60 => Bitboard::new_960(),
             _ => Bitboard::new(),
         };
-        Game { board, mode: gamemode, states: HashMap::new(),minlog,record: String::new(),counter: 0}
+        Self{
+            board,
+            mode: gamemode,
+            states: HashMap::new(),
+            minlog,
+            record: String::new(),
+            counter: 0,
+            varmap,
+            model,
+            device,
+            k: 400.0,
+        }
     }
+        
     
     pub fn store_position(&mut self){
         
@@ -91,6 +152,11 @@ impl Game{
         
 
         *self.states.entry(arr).or_insert(0) += 1;
+    }
+    
+    pub fn eval_stm(&self) -> i32 {
+        let e = predict(&self.model, &self.device, &self.board, self.k);
+        if self.board.to_move == 0 { e } else { -e }
     }
     
    pub fn validate_input(&self,board: &Bitboard, mut input: String) -> (i32,i32,i32){

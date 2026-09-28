@@ -42,6 +42,7 @@ impl BardBot{
             last_api_call: None,
             api_rate_limit_s: 10,
         }
+        
     }
 
 

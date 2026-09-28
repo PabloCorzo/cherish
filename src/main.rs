@@ -7,6 +7,7 @@ use dotenv::dotenv;
 
 use std::{env, process::exit};
 use crate::{game::{Bot, Game, GameMode}};
+use candle_core::Device;
 
 //CARGO RUN -- -960 -> chess960 
 
@@ -31,11 +32,11 @@ fn main(){
     let n60: bool = args.iter().any(|arg| arg == "-960");
     let speed: bool = args.iter().any(|arg| arg == "-speed");
 
-    let eval_mode: bool = args.iter().any(|arg| arg == "-eval");
-    if eval_mode{
-        println!("Running eval mode");
+    let eval_mode_train: bool = args.iter().any(|arg| arg == "-evaltrain");
+    if eval_mode_train{
+        println!("Training model");
         let _ = bots::eval_model::train_model();
-        println!("Eval mode finished");
+        println!("Training complete");
         exit(0)
     }
 

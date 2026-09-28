@@ -2,6 +2,7 @@ use candle_core::{Device, Tensor};
 use candle_nn::{VarMap, AdamW, ParamsAdamW, Optimizer, ModuleT ,loss, Sequential, seq, linear, Activation, VarBuilder};
 use std::collections::HashMap;
 use std::path::PathBuf;
+use crate::bitboard::Bitboard; 
 
 // Create the path by checking for Home prefix first
 fn expand_tilde(path: &str) -> PathBuf {
@@ -236,4 +237,67 @@ fn shuffle<T>(v: &mut [T], seed: u64) {
         let j = (next_u64() % (i as u64 + 1)) as usize;
         v.swap(i, j);
     }
+}
+
+/////// PREDICTION LOGIC
+
+/// Convert a Bitboard into the same 768-length one-hot feature vector
+/// used during training: index = color*6*64 + piece_type*64 + square,
+/// where color: 0=white,1=black and piece_type: p=0,n=1,b=2,r=3,q=4,k=5.
+fn bitboard_to_features(board: &Bitboard) -> [f32; 768] {
+    let mut features = [0f32; 768];
+
+    // (bitboard, color, piece_type) — order/index mapping must match fen_to_features
+    let planes: [(u64, usize, usize); 12] = [
+        (board.wp, 0, 0),
+        (board.wn, 0, 1),
+        (board.wb, 0, 2),
+        (board.wr, 0, 3),
+        (board.wq, 0, 4),
+        (board.wk, 0, 5),
+        (board.bp, 1, 0),
+        (board.bn, 1, 1),
+        (board.bb, 1, 2),
+        (board.br, 1, 3),
+        (board.bq, 1, 4),
+        (board.bk, 1, 5),
+    ];
+
+    for (bb, color, piece_type) in planes {
+        let mut bits = bb;
+        while bits != 0 {
+            let sq = bits.trailing_zeros() as usize; // 0..64, a1=0 .. h8=63
+            let index = color * 6 * 64 + piece_type * 64 + sq;
+            features[index] = 1.0;
+            bits &= bits - 1; // clear lowest set bit
+        }
+    }
+
+    features
+}
+
+
+/// Run the NNUE model on a single Bitboard and return a centipawn-scale eval,
+/// un-normalizing the tanh(eval / k) squashing applied at training time.
+/// `k` must match the value used in `normalize_data` during training (400.0).
+pub fn predict(model: &Sequential, device: &Device, board: &Bitboard, k: f32) -> i32 {
+    let features = bitboard_to_features(board);
+
+    let input = Tensor::from_vec(features.to_vec(), (1, 768), device)
+        .expect("failed to build input tensor from board features");
+
+    let pred = model
+        .forward_t(&input, false) // eval mode: no dropout/batchnorm-train behavior
+        .expect("forward pass failed during inference");
+
+    let normalized: f32 = pred
+        .reshape(())
+        .expect("failed to reshape prediction to scalar")
+        .to_scalar::<f32>()
+        .expect("failed to read scalar prediction off the device");
+
+    // inverse of normalize_eval: tanh(eval/k) -> eval = k * atanh(normalized)
+    // clamp to avoid atanh blowing up near +/-1 from float error
+    let clamped = normalized.clamp(-0.999999, 0.999999);
+    (k * clamped.atanh()) as i32
 }
